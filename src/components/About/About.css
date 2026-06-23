@@ -1,0 +1,255 @@
+.about {
+  padding: 100px 0;
+  background-color: var(--darker-bg);
+  color: var(--text-dark);
+  position: relative;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+.about-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.about-header {
+  text-align: center;
+  margin-bottom: 50px;
+}
+
+.section-title {
+  font-size: 2.5rem;
+  margin-bottom: 20px;
+  color: var(--text-dark);
+  font-weight: 800;
+  position: relative;
+}
+
+.about-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 60px;
+  align-items: center;
+}
+
+.about-image {
+  position: relative;
+}
+
+.image-container {
+  width: 100%;
+  height: 400px;
+  position: relative;
+  border-radius: 20px;
+  box-shadow: 0 10px 20px var(--shadow-color);
+  overflow: hidden;
+  border: 1px solid var(--card-border);
+}
+
+.stock-image-wrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.about-stock-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.5s ease;
+}
+
+.stock-image-wrapper:hover .about-stock-image {
+  transform: scale(1.05);
+}
+
+.image-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.3));
+}
+
+.value-tags {
+  position: absolute;
+  bottom: 20px;
+  left: 0;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 0 15px;
+}
+
+.value-tag {
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: white;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+  opacity: 0.9;
+  transition: all 0.3s ease;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  display: inline-flex;
+  align-items: center;
+  animation: fadeInUp 0.8s forwards;
+}
+
+.value-tag:hover {
+  transform: translateY(-5px);
+  opacity: 1;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+}
+
+.value-tag.security {
+  background: linear-gradient(135deg, #4481eb, #04befe);
+  animation-delay: 0.1s;
+}
+
+.value-tag.trust {
+  background: linear-gradient(135deg, #43e97b, #38f9d7);
+  animation-delay: 0.3s;
+}
+
+.value-tag.innovation {
+  background: linear-gradient(135deg, #fa709a, #fee140);
+  animation-delay: 0.5s;
+}
+
+.value-tag.community {
+  background: linear-gradient(135deg, #8f66ff, #5ab9fe);
+  animation-delay: 0.7s;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 0.9;
+    transform: translateY(0);
+  }
+}
+
+.about-text {
+  display: flex;
+  flex-direction: column;
+  gap: 25px;
+}
+
+.about-description {
+  font-size: 1.1rem;
+  line-height: 1.7;
+  margin-bottom: 10px;
+  color: var(--text-medium);
+}
+
+.about-mission,
+.about-vision {
+  background-color: var(--card-bg);
+  padding: 25px;
+  border-radius: 12px;
+  transition: all 0.3s ease;
+  box-shadow: 0 8px 20px var(--shadow-color);
+  border: 1px solid var(--card-border);
+}
+
+.about-vision {
+  /* border styles are now consistent with about-mission */
+}
+
+.about-mission:hover,
+.about-vision:hover {
+  background-color: #ffffff;
+  transform: translateY(-5px);
+  box-shadow: 0 12px 30px var(--shadow-color);
+}
+
+.about-mission h3,
+.about-vision h3 {
+  font-size: 1.2rem;
+  margin-bottom: 10px;
+  color: var(--text-dark);
+  font-weight: 700;
+}
+
+.about-mission p,
+.about-vision p {
+  font-size: 1rem;
+  line-height: 1.6;
+  color: var(--text-medium);
+}
+
+/* RTL Support */
+[dir="rtl"] .about-mission,
+[dir="rtl"] .about-vision {
+  /* borders removed */
+}
+
+[dir="rtl"] .block::before {
+  right: auto;
+  left: -40px;
+}
+
+/* Responsive Styles */
+@media (max-width: 992px) {
+  .about-grid {
+    grid-template-columns: 1fr;
+    gap: 30px;
+  }
+  
+  .section-title {
+    font-size: 2rem;
+  }
+  
+  .about-image {
+    order: 2;
+  }
+  
+  .about-text {
+    order: 1;
+  }
+}
+
+@media (max-width: 768px) {
+  .about {
+    padding: 70px 0;
+  }
+  
+  .image-container {
+    height: 300px;
+  }
+  
+  .section-title {
+    font-size: 1.8rem;
+  }
+  
+  .about-description {
+    font-size: 1rem;
+  }
+  
+  .block {
+    width: 50px;
+    height: 50px;
+  }
+  
+  .block::before {
+    width: 20px;
+    right: -20px;
+  }
+  
+  [dir="rtl"] .block::before {
+    left: -20px;
+  }
+}

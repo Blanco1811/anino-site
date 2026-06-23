@@ -1,0 +1,188 @@
+@import "tailwindcss";
+
+:root {
+  /* 3-color system inspired by The Giving Block style */
+  --brand-ink: #0f172a;
+  --brand-surface: #ffffff;
+  --brand-accent: #2ea7ff;
+
+  --primary-color: var(--brand-accent);
+  --primary-color-dark: var(--brand-ink);
+  --secondary-color: var(--brand-accent);
+  --accent-color: var(--brand-accent);
+  --tertiary-color: var(--brand-accent);
+  --dark-bg: var(--brand-surface);
+  --darker-bg: var(--brand-surface);
+  --text-dark: var(--brand-ink);
+  --text-medium: var(--brand-ink);
+  --text-light: var(--brand-ink);
+  --card-bg: var(--brand-surface);
+  --card-border: var(--brand-accent);
+  --shadow-color: rgba(15, 23, 42, 0.1);
+
+  /* Shared aliases used by auth/admin component styles */
+  --color-primary: var(--brand-accent);
+  --color-primary-dark: var(--brand-ink);
+  --color-primary-rgb: 46, 167, 255;
+  --color-text-primary: var(--brand-ink);
+  --color-text-secondary: var(--brand-ink);
+  --color-text-contrast: var(--brand-surface);
+  --color-background-lighter: var(--brand-surface);
+  --color-success: var(--brand-accent);
+  --color-error: var(--brand-accent);
+}
+
+/* Base styles */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--dark-bg);
+  color: var(--text-dark);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
+  line-height: 1.5;
+  overflow-x: hidden;
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Container */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+/* App container */
+.app-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+main {
+  flex: 1;
+}
+
+.logo {
+  direction: ltr !important;
+}
+
+/* Typography */
+h1, h2, h3, h4, h5, h6 {
+  font-family: "Trebuchet MS", "Segoe UI", Tahoma, Arial, sans-serif;
+  margin-bottom: 1rem;
+}
+
+.section-title {
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+  color: var(--text-dark);
+  position: relative;
+  padding-bottom: 15px;
+}
+
+.section-title:after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 80px;
+  height: 4px;
+  background: linear-gradient(90deg, var(--primary-color), var(--primary-color));
+  border-radius: 2px;
+}
+
+[dir="rtl"] .section-title:after {
+  left: auto;
+  right: 0;
+}
+
+/* Home page: remove decorative lines under section titles */
+.home-main .section-title {
+  padding-bottom: 0;
+}
+
+.home-main .section-title:after {
+  content: none;
+  display: none;
+}
+
+.home-main .section-divider {
+  display: none;
+}
+
+.home-main .distribution-title {
+  padding-bottom: 0;
+}
+
+.home-main .distribution-title:after {
+  content: none;
+  display: none;
+}
+
+/* Button Styles */
+button {
+  cursor: pointer;
+  font-family: inherit;
+}
+
+/* Link Styles */
+a {
+  color: var(--primary-color);
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+a:hover {
+  color: var(--primary-color-dark);
+}
+
+/* Remove default focus styles */
+*:focus {
+  outline: none;
+}
+
+/* Custom focus styles */
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
+}
+
+/* RTL support for the entire app */
+[dir="rtl"] {
+  text-align: right;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+/* Responsive breakpoints are handled by components */
+
+/* Offset for fixed/sticky header in campaign layout */
+.campaign-layout-main-content {
+  padding-top: 100px; /* Adjust this value based on the actual header height */
+}

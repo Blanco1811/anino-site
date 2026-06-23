@@ -1,0 +1,108 @@
+.admin-login-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  padding: 1rem;
+  background-color: #f7f9fc;
+}
+
+.admin-login-card {
+  width: 100%;
+  max-width: 420px;
+  padding: 2rem;
+  border-radius: 8px;
+  background-color: white;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+}
+
+@media (max-width: 480px) {
+  .admin-login-container {
+    padding: 0.5rem;
+  }
+  
+  .admin-login-card {
+    padding: 1.5rem;
+    max-width: 100%;
+  }
+}
+
+.admin-login-card h2 {
+  margin-top: 0;
+  margin-bottom: 1.5rem;
+  text-align: center;
+  color: #000;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.admin-login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.form-group label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  
+}
+
+.form-group input {
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+  color:#000;
+  border-radius: 4px;
+  font-size: 1rem;
+  transition: border-color 0.2s;
+  width: 100%;
+}
+
+@media (max-width: 480px) {
+  .form-group input {
+    font-size: 16px; /* Prevents iOS zoom on focus */
+    padding: 0.85rem;
+  }
+}
+
+.form-group input:focus {
+  border-color: #4285f4;
+  outline: none;
+}
+
+.form-group input[type="password"] {
+  color: #000;
+}
+
+.error-message {
+  color: #d93025;
+  font-size: 0.85rem;
+  margin-top: -0.5rem;
+}
+
+.admin-login-button {
+  padding: 0.75rem;
+  background-color: #4285f4;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.admin-login-button:hover {
+  background-color: #3367d6;
+}
+
+.admin-login-button:disabled {
+  background-color: #a1b4d4;
+  cursor: not-allowed;
+}

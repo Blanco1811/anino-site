@@ -1,0 +1,508 @@
+.hero {
+  margin-top: 80px;
+  min-height: clamp(280px, 56vh, 620px);
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  background-image: url('/about.jpg');
+  background-size: cover;
+  background-position: center 24%;
+  background-attachment: scroll;
+  overflow: hidden;
+  padding: 0 20px;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 0 0 32px 32px;
+  box-shadow: 0 20px 45px rgba(15, 23, 42, 0.18);
+  transition: all 0.6s cubic-bezier(0.25, 0.1, 0.25, 1.0);
+  will-change: transform, opacity;
+}
+
+.hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 18% 22%, rgba(46, 167, 255, 0.25), transparent 45%),
+    radial-gradient(circle at 82% 78%, rgba(15, 23, 42, 0.28), transparent 50%);
+  z-index: 1;
+}
+
+@media (min-width: 1700px) {
+  .hero {
+    min-height: clamp(320px, 50vh, 720px);
+  }
+}
+
+.hero-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.36), rgba(255, 255, 255, 0.12));
+  opacity: 1;
+  transition: opacity 0.8s cubic-bezier(0.25, 0.1, 0.25, 1.0);
+  will-change: opacity;
+}
+
+.hero-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-around; /* Adjusted to space-around or center if only one item */
+  max-width: 1200px;
+  width: 100%;
+  position: relative;
+  z-index: 3;
+}
+
+/* Styles for .hero-text-container, .hero-title, .hero-slogan, .hero-subtitle, .hero-cta, .arrow-icon, .hero-registration-form have been moved to HeroText.css */
+
+.coin-animation {
+  position: relative;
+  width: 300px;
+  height: 300px;
+  perspective: 1500px;
+  margin-left: 50px;
+}
+
+.coin {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  transform-style: preserve-3d;
+  animation: spin 20s infinite cubic-bezier(0.45, 0, 0.55, 1);
+  will-change: transform;
+  filter: drop-shadow(0 20px 30px rgba(0, 0, 0, 0.4));
+}
+
+@keyframes spin {
+  0% {
+    transform: rotateY(0deg);
+  }
+  100% {
+    transform: rotateY(360deg);
+  }
+}
+
+.coin-inner {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  transform-style: preserve-3d;
+}
+
+.coin-front, .coin-back {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  backface-visibility: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.8rem;
+  font-weight: 700;
+  color: #553c00;
+  text-shadow: 0 1px 1px rgba(255, 255, 255, 0.4);
+  overflow: hidden;
+  box-shadow: 0 0 50px rgba(255, 200, 0, 0.6);
+  letter-spacing: -1px;
+  font-family: 'Arial', sans-serif;
+}
+
+.coin-front {
+  background: linear-gradient(135deg, #e6b800 0%, #ffd700 40%, #ffcc00 60%, #e6b800 100%);
+  z-index: 2;
+  text-transform: uppercase;
+}
+
+.coin-circle {
+  position: absolute;
+  width: 94%;
+  height: 94%;
+  border-radius: 50%;
+  border: 4px solid rgba(173, 137, 0, 0.6);
+  box-sizing: border-box;
+  opacity: 0.8;
+}
+
+.coin-rim {
+  position: absolute;
+  width: 98%;
+  height: 98%;
+  border-radius: 50%;
+  border: 2px dashed rgba(230, 190, 0, 0.7);
+  box-sizing: border-box;
+  animation: rotate 60s linear infinite;
+}
+
+@keyframes rotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.coin-logo, .coin-text {
+  font-size: 2.2rem;
+  z-index: 5;
+  color: #553c00;
+  text-shadow: 0 1px 1px rgba(255, 255, 255, 0.4);
+  letter-spacing: -0.5px;
+  font-weight: 800;
+  position: relative;
+  text-transform: uppercase;
+}
+
+.coin-logo::before, .coin-text::before {
+  content: '';
+  position: absolute;
+  width: 110%;
+  height: 110%;
+  top: -5%;
+  left: -5%;
+  background: radial-gradient(ellipse at center, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0) 70%);
+  border-radius: 50%;
+  z-index: -1;
+}
+
+.highlight {
+  color: #b38600;
+  font-weight: 900;
+}
+
+.coin-edge {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  transform: translateZ(-15px) rotateX(90deg);
+  border-radius: 50%;
+  background: #cc9900;
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+}
+
+.coin-edge-line {
+  position: absolute;
+  width: 100%;
+  height: 1.5px;
+  background: #b38600;
+  top: 50%;
+  left: 0;
+  transform-origin: center;
+  transform: translateY(-50%) rotate(calc(var(--i, 0) * 6deg));
+}
+
+.coin-edge-line:nth-child(odd) {
+  background: #e6b800;
+}
+
+@keyframes coin-edge-lines {
+  0% { opacity: 0.7; }
+  50% { opacity: 0.9; }
+  100% { opacity: 0.7; }
+}
+
+.coin-edge .coin-edge-line:nth-child(1) { --i: 1; }
+.coin-edge .coin-edge-line:nth-child(2) { --i: 2; }
+.coin-edge .coin-edge-line:nth-child(3) { --i: 3; }
+.coin-edge .coin-edge-line:nth-child(4) { --i: 4; }
+.coin-edge .coin-edge-line:nth-child(5) { --i: 5; }
+.coin-edge .coin-edge-line:nth-child(6) { --i: 6; }
+.coin-edge .coin-edge-line:nth-child(7) { --i: 7; }
+.coin-edge .coin-edge-line:nth-child(8) { --i: 8; }
+.coin-edge .coin-edge-line:nth-child(9) { --i: 9; }
+.coin-edge .coin-edge-line:nth-child(10) { --i: 10; }
+.coin-edge .coin-edge-line:nth-child(11) { --i: 11; }
+.coin-edge .coin-edge-line:nth-child(12) { --i: 12; }
+.coin-edge .coin-edge-line:nth-child(13) { --i: 13; }
+.coin-edge .coin-edge-line:nth-child(14) { --i: 14; }
+.coin-edge .coin-edge-line:nth-child(15) { --i: 15; }
+.coin-edge .coin-edge-line:nth-child(16) { --i: 16; }
+.coin-edge .coin-edge-line:nth-child(17) { --i: 17; }
+.coin-edge .coin-edge-line:nth-child(18) { --i: 18; }
+.coin-edge .coin-edge-line:nth-child(19) { --i: 19; }
+.coin-edge .coin-edge-line:nth-child(20) { --i: 20; }
+.coin-edge .coin-edge-line:nth-child(21) { --i: 21; }
+.coin-edge .coin-edge-line:nth-child(22) { --i: 22; }
+.coin-edge .coin-edge-line:nth-child(23) { --i: 23; }
+.coin-edge .coin-edge-line:nth-child(24) { --i: 24; }
+.coin-edge .coin-edge-line:nth-child(25) { --i: 25; }
+.coin-edge .coin-edge-line:nth-child(26) { --i: 26; }
+.coin-edge .coin-edge-line:nth-child(27) { --i: 27; }
+.coin-edge .coin-edge-line:nth-child(28) { --i: 28; }
+.coin-edge .coin-edge-line:nth-child(29) { --i: 29; }
+.coin-edge .coin-edge-line:nth-child(30) { --i: 30; }
+.coin-edge .coin-edge-line:nth-child(31) { --i: 31; }
+.coin-edge .coin-edge-line:nth-child(32) { --i: 32; }
+.coin-edge .coin-edge-line:nth-child(33) { --i: 33; }
+.coin-edge .coin-edge-line:nth-child(34) { --i: 34; }
+.coin-edge .coin-edge-line:nth-child(35) { --i: 35; }
+.coin-edge .coin-edge-line:nth-child(36) { --i: 36; }
+.coin-edge .coin-edge-line:nth-child(37) { --i: 37; }
+.coin-edge .coin-edge-line:nth-child(38) { --i: 38; }
+.coin-edge .coin-edge-line:nth-child(39) { --i: 39; }
+.coin-edge .coin-edge-line:nth-child(40) { --i: 40; }
+.coin-edge .coin-edge-line:nth-child(41) { --i: 41; }
+.coin-edge .coin-edge-line:nth-child(42) { --i: 42; }
+.coin-edge .coin-edge-line:nth-child(43) { --i: 43; }
+.coin-edge .coin-edge-line:nth-child(44) { --i: 44; }
+.coin-edge .coin-edge-line:nth-child(45) { --i: 45; }
+.coin-edge .coin-edge-line:nth-child(46) { --i: 46; }
+.coin-edge .coin-edge-line:nth-child(47) { --i: 47; }
+.coin-edge .coin-edge-line:nth-child(48) { --i: 48; }
+.coin-edge .coin-edge-line:nth-child(49) { --i: 49; }
+.coin-edge .coin-edge-line:nth-child(50) { --i: 50; }
+.coin-edge .coin-edge-line:nth-child(51) { --i: 51; }
+.coin-edge .coin-edge-line:nth-child(52) { --i: 52; }
+.coin-edge .coin-edge-line:nth-child(53) { --i: 53; }
+.coin-edge .coin-edge-line:nth-child(54) { --i: 54; }
+.coin-edge .coin-edge-line:nth-child(55) { --i: 55; }
+.coin-edge .coin-edge-line:nth-child(56) { --i: 56; }
+.coin-edge .coin-edge-line:nth-child(57) { --i: 57; }
+.coin-edge .coin-edge-line:nth-child(58) { --i: 58; }
+.coin-edge .coin-edge-line:nth-child(59) { --i: 59; }
+.coin-edge .coin-edge-line:nth-child(60) { --i: 60; }
+
+.coin-stars {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  transform: translateZ(1px);
+}
+
+.coin-star {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  background: transparent;
+  transform: rotate(45deg);
+}
+
+.coin-star:before, 
+.coin-star:after {
+  content: "";
+  position: absolute;
+  background-color: #553c00;
+  opacity: 0.6;
+}
+
+.coin-star:before {
+  width: 12px;
+  height: 2px;
+  top: 5px;
+  left: 0;
+}
+
+.coin-star:after {
+  width: 2px;
+  height: 12px;
+  top: 0;
+  left: 5px;
+}
+
+.star-1 { top: 15%; left: 20%; }
+.star-2 { top: 25%; left: 80%; }
+.star-3 { top: 80%; left: 15%; }
+.star-4 { top: 70%; left: 80%; }
+.star-5 { top: 45%; left: 90%; }
+.star-6 { top: 10%; left: 40%; }
+.star-7 { top: 85%; left: 50%; }
+.star-8 { top: 40%; left: 10%; }
+
+.coin-shine {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0) 50%, rgba(255,255,255,0.1) 100%);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 10;
+  animation: shine 8s infinite alternate;
+}
+
+@keyframes shine {
+  0% { opacity: 0.5; transform: translateX(-25%) translateY(-25%) rotate(0deg); }
+  25% { opacity: 0.7; }
+  50% { opacity: 0.5; transform: translateX(25%) translateY(25%) rotate(180deg); }
+  75% { opacity: 0.3; }
+  100% { opacity: 0.5; transform: translateX(-25%) translateY(-25%) rotate(360deg); }
+}
+
+.coin-emblem {
+  position: absolute;
+  width: 60%;
+  height: 60%;
+  border-radius: 50%;
+  border: 2px solid rgba(102, 51, 0, 0.3);
+  transform: translateZ(1px);
+  background: radial-gradient(circle at center, rgba(255,215,0,0.2) 0%, rgba(255,215,0,0) 70%);
+}
+
+.coin-emblem::before {
+  content: '';
+  position: absolute;
+  width: 80%;
+  height: 80%;
+  top: 10%;
+  left: 10%;
+  border-radius: 50%;
+  border: 1px solid rgba(102, 51, 0, 0.2);
+  background: radial-gradient(circle at center, rgba(255,215,0,0.1) 0%, rgba(255,215,0,0) 70%);
+}
+
+.coin-emblem::after {
+  content: '';
+  position: absolute;
+  width: 40%;
+  height: 40%;
+  top: 30%;
+  left: 30%;
+  border-radius: 50%;
+  background: radial-gradient(circle at center, rgba(102, 51, 0, 0.1) 0%, rgba(102, 51, 0, 0) 70%);
+}
+
+/* 3D Animation */
+@keyframes spin {
+  0% {
+    transform: rotateY(0deg);
+  }
+  100% {
+    transform: rotateY(360deg);
+  }
+}
+
+/* Add slightly slower spin on hover to make it easier to see details */
+.coin-animation:hover .coin {
+  animation: spin 40s infinite cubic-bezier(0.45, 0, 0.55, 1);
+}
+
+.scroll-indicator {
+  position: absolute;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: rgba(255, 255, 255, 0.9);
+  opacity: 0.8;
+  animation: bounce 2s infinite;
+}
+
+@keyframes bounce {
+  0%, 20%, 50%, 80%, 100% {
+    transform: translateY(0) translateX(-50%);
+  }
+  40% {
+    transform: translateY(-10px) translateX(-50%);
+  }
+  60% {
+    transform: translateY(-5px) translateX(-50%);
+  }
+}
+
+.mouse {
+  width: 26px;
+  height: 40px;
+  border: 2px solid rgba(255, 255, 255, 0.95);
+  border-radius: 20px;
+  position: relative;
+}
+
+.mouse-wheel {
+  width: 6px;
+  height: 6px;
+  background-color: rgba(255, 255, 255, 0.95);
+  border-radius: 50%;
+  position: absolute;
+  top: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  animation: scroll 1.5s infinite;
+}
+
+@keyframes scroll {
+  0% {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(-50%) translateY(15px);
+  }
+}
+
+.scroll-text {
+  margin-top: 5px;
+  font-size: 12px;
+  letter-spacing: 2px;
+}
+
+/* RTL Support */
+[dir="rtl"] .hero-cta .arrow-icon {
+  margin-left: 0;
+  margin-right: 8px;
+  transform: rotate(180deg);
+}
+
+[dir="rtl"] .hero-cta:hover .arrow-icon {
+  transform: rotate(180deg) translateX(5px);
+}
+
+/* Responsive styling */
+@media (max-width: 992px) {
+  .hero-content {
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  .hero-text-container {
+    margin-bottom: 50px;
+  }
+  
+  .hero-title {
+    font-size: 3.5rem;
+  }
+  
+  .hero-slogan {
+    font-size: 1.5rem;
+  }
+  
+  .coin-animation {
+    width: 200px;
+    height: 200px;
+  }
+}
+
+@media (max-width: 768px) {
+  .hero {
+    background-position: center 30%;
+    min-height: clamp(220px, 42vh, 360px);
+    border-radius: 0 0 20px 20px;
+  }
+
+  .hero-title {
+    font-size: 3rem;
+  }
+  
+  .hero-slogan {
+    font-size: 1.3rem;
+  }
+  
+  .hero-subtitle {
+    font-size: 1rem;
+  }
+  
+  .hero-cta {
+    padding: 12px 25px;
+    font-size: 1rem;
+  }
+
+  .scroll-indicator {
+    bottom: 18px;
+  }
+}

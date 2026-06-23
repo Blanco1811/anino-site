@@ -1,0 +1,242 @@
+.cta {
+  position: relative;
+  color: white;
+  overflow: hidden;
+  padding: 100px 0;
+}
+
+.cta-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+  position: relative;
+  z-index: 2;
+}
+
+.cta-content {
+  background: rgba(19, 24, 36, 0.8);
+  backdrop-filter: blur(10px);
+  border-radius: 20px;
+  padding: 60px 40px;
+  text-align: center;
+  box-shadow: 0 15px 50px rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  max-width: 800px;
+  margin: 0 auto;
+  position: relative;
+  z-index: 2;
+}
+
+.cta-title {
+  font-size: 2.5rem;
+  margin-bottom: 20px;
+  font-weight: 700;
+  background: linear-gradient(90deg, #5AB9FE 0%, #8F66FF 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.cta-description {
+  font-size: 1.2rem;
+  color: rgba(255, 255, 255, 0.9);
+  line-height: 1.6;
+  margin-bottom: 30px;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.cta-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+}
+
+.cta-join-button {
+  background: linear-gradient(90deg, #5AB9FE 0%, #8F66FF 100%);
+  color: white;
+  border: none;
+  padding: 15px 30px;
+  border-radius: 30px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  box-shadow: 0 10px 25px rgba(90, 185, 254, 0.3);
+  transition: all 0.3s ease;
+}
+
+.cta-join-button:hover {
+  box-shadow: 0 15px 30px rgba(90, 185, 254, 0.4);
+}
+
+.arrow-icon {
+  margin-left: 8px;
+  transition: transform 0.3s ease;
+}
+
+.cta-join-button:hover .arrow-icon {
+  transform: translateX(5px);
+}
+
+.cta-background {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  overflow: hidden;
+}
+
+.cta-bg-shape {
+  position: absolute;
+  border-radius: 50%;
+  opacity: 0.3;
+}
+
+.shape-1 {
+  width: 500px;
+  height: 500px;
+  top: -250px;
+  left: -100px;
+  background: linear-gradient(135deg, #5AB9FE 0%, transparent 70%);
+  animation: floatShape 15s infinite alternate ease-in-out;
+}
+
+.shape-2 {
+  width: 400px;
+  height: 400px;
+  bottom: -200px;
+  right: -100px;
+  background: linear-gradient(135deg, #8F66FF 0%, transparent 70%);
+  animation: floatShape 20s infinite alternate-reverse ease-in-out;
+}
+
+.shape-3 {
+  width: 300px;
+  height: 300px;
+  top: 20%;
+  right: 10%;
+  background: linear-gradient(135deg, #6E8FFF 0%, transparent 70%);
+  animation: floatShape 18s infinite alternate ease-in-out;
+}
+
+@keyframes floatShape {
+  0% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+  100% {
+    transform: translate(30px, 30px) rotate(10deg);
+  }
+}
+
+.cta-particles {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.particle {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(90, 185, 254, 0.7), rgba(143, 102, 255, 0.7));
+  box-shadow: 0 0 10px rgba(90, 185, 254, 0.5);
+  animation: floatParticle linear infinite;
+}
+
+@keyframes floatParticle {
+  0% {
+    transform: translate(0, 0) scale(1);
+    opacity: 0;
+  }
+  20% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate(100px, -100px) scale(0);
+    opacity: 0;
+  }
+}
+
+/* RTL Support */
+[dir="rtl"] .arrow-icon {
+  margin-left: 0;
+  margin-right: 8px;
+  transform: rotate(180deg);
+}
+
+[dir="rtl"] .cta-join-button:hover .arrow-icon {
+  transform: rotate(180deg) translateX(5px);
+}
+
+/* Responsive Styles */
+@media (max-width: 768px) {
+  .cta {
+    padding: 70px 0;
+  }
+  
+  .cta-content {
+    padding: 40px 25px;
+  }
+  
+  .cta-title {
+    font-size: 2rem;
+  }
+  
+  .cta-description {
+    font-size: 1rem;
+  }
+  
+  .cta-join-button {
+    padding: 12px 25px;
+    font-size: 1rem;
+  }
+}
+
+/* Form container and toggle buttons */
+.form-container {
+  width: 100%;
+  margin-bottom: 1rem;
+}
+
+.form-toggle-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin: 1rem 0;
+}
+
+.toggle-button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1.25rem;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background-color: rgba(255, 255, 255, 0.1);
+  color: var(--color-text-secondary, rgba(255, 255, 255, 0.7));
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.toggle-button:hover {
+  background-color: rgba(255, 255, 255, 0.15);
+  transform: translateY(-2px);
+}
+
+.toggle-button.active {
+  background: linear-gradient(90deg, #5AB9FE 0%, #8F66FF 100%);
+  color: white;
+  border-color: transparent;
+}

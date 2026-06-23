@@ -1,0 +1,179 @@
+{
+  "common": {
+    "saving": "Saving...",
+    "save": "Save Changes",
+    "loading": "Loading...",
+    "error": "An error occurred",
+    "edit": "Edit",
+    "delete": "Delete",
+    "cancel": "Cancel"
+  },
+  "nav": {
+    "about": "Who it suits",
+    "features": "System Capabilities",
+    "joinNow": "Start Trial"
+  },
+  "header": {
+    "home": "Home",
+    "about": "Who it suits",
+    "features": "Capabilities",
+    "whatsappDemo": "Get WhatsApp Demo",
+    "login": "Login",
+    "logout": "Logout",
+    "greeting": "Hello, {{name}}",
+    "tools": "Tools",
+    "whitepaper": "About",
+    "leads": "Leads Management",
+    "agents": "My Agents"
+  },
+  "hero": {
+    "title": "ANINO AI",
+    "slogan": "AI Agent that Brings Customers and Manages Inquiries 24/7",
+    "subtitle": "AI system for businesses that answers on WhatsApp, receives and makes calls, returns to leads, sends emails, and manages campaigns.",
+    "cta": "Start Trial",
+    "scroll": "Scroll Down"
+  },
+  "about": {
+    "title": "Who is it for?",
+    "description": "ANINO suits a wide range of businesses and service providers in Israel, enabling them to convert customer inquiries into closed deals automatically and instantly.",
+    "missionTitle": "Suitable for any industry",
+    "mission": "Our agents are tailored to the needs of: restaurants (orders and deliveries), private tutors, air conditioner installers, real estate agents, clinics, beauticians, technicians (electricians, plumbers), local stores and services.",
+    "visionTitle": "Tailored to you",
+    "vision": "Each business gets a dedicated agent with specific guidelines and business profile including opening hours, menus, services, prices, and answers to common customer questions.",
+    "valueTags": {
+      "security": "24/7 Availability",
+      "trust": "Increase Sales",
+      "innovation": "Instant Response",
+      "community": "Time Saving"
+    }
+  },
+  "features": {
+    "title": "ANINO AI Capabilities",
+    "transparency": {
+      "title": "WhatsApp AI Agent for Business",
+      "description": "Replies instantly to customers on WhatsApp, provides info about services and prices, answers FAQs, and books meetings in the calendar completely automatically."
+    },
+    "rewards": {
+      "title": "AI Voice Calling Agent",
+      "description": "Answers incoming calls from customers and makes outbound calls (e.g. returning to leads who left details), schedules appointments, and classifies inquiries at a human conversation level."
+    },
+    "community": {
+      "title": "Multi-Channel Campaigns",
+      "description": "Sends broadcast WhatsApp messages to opted-in customers, executes email campaigns, and implements social media marketing automations (Facebook, Instagram)."
+    },
+    "security": {
+      "title": "Lead Management & Top-up Balance",
+      "description": "Simple CRM system to manage leads collected by the agent. Billing is based on a pre-loaded top-up balance, charged per sent message or call minute."
+    }
+  },
+  "cta": {
+    "title": "Want a Live Demo without Commitment?",
+    "description": "Send us a message on WhatsApp now to see how the AI agent answers and manages the inquiry.",
+    "button": "Get WhatsApp Demo",
+    "hideForms": "Hide Forms",
+    "register": "Start Trial",
+    "login": "Login"
+  },
+  "footer": {
+    "rights": "© 2026 ANINO. All rights reserved.",
+    "contact": "Contact Us",
+    "terms": "Terms of Use",
+    "privacy": "Privacy Policy",
+    "cookiePolicy": "Cookie Policy",
+    "links": "Links",
+    "resources": "Resources",
+    "legal": "Legal",
+    "connect": "Login",
+    "whitepaper": "About",
+    "documentation": "Documentation",
+    "smartContracts": "My Agents",
+    "faqs": "FAQs",
+    "agents": "My Agents"
+  },
+  "registration": {
+    "title": "Join ANINO AI",
+    "subtitle": "Create your account to start growing",
+    "hideForm": "Hide Form",
+    "firstName": "First Name",
+    "firstNamePlaceholder": "Enter your first name",
+    "lastName": "Last Name",
+    "lastNamePlaceholder": "Enter your last name",
+    "email": "Email Address",
+    "emailPlaceholder": "Enter your email address",
+    "phone": "Phone Number",
+    "phonePlaceholder": "Enter your phone number",
+    "optional": "optional",
+    "password": "Password",
+    "passwordPlaceholder": "Create a secure password",
+    "confirmPassword": "Confirm Password",
+    "confirmPasswordPlaceholder": "Confirm your password",
+    "agreeTerms": "I agree to the Terms of Use and Privacy Policy",
+    "termsLink": "Terms of Use",
+    "next": "Next",
+    "back": "Back",
+    "submit": "Create Account",
+    "submitting": "Creating account...",
+    "successTitle": "Registration Succeeded!",
+    "successMessage": "Your account has been created. Welcome to ANINO AI!",
+    "retry": "Try Again",
+    "errors": {
+      "firstNameRequired": "First name is required",
+      "lastNameRequired": "Last name is required",
+      "emailRequired": "Email is required",
+      "emailInvalid": "Please enter a valid email address",
+      "passwordRequired": "Password is required",
+      "passwordLength": "Password must be at least 8 characters",
+      "confirmPasswordRequired": "Please confirm your password",
+      "passwordsDoNotMatch": "Passwords do not match",
+      "termsRequired": "You must agree to the terms to continue"
+    }
+  },
+  "login": {
+    "title": "Welcome Back",
+    "subtitle": "Log in to your ANINO AI account",
+    "email": "Email Address",
+    "emailPlaceholder": "Enter your email address",
+    "password": "Password",
+    "passwordPlaceholder": "Enter your password",
+    "rememberMe": "Remember me",
+    "forgotPassword": "Forgot password?",
+    "submit": "Login",
+    "submitting": "Logging in...",
+    "successTitle": "Login Succeeded!",
+    "successMessage": "Welcome back to ANINO AI!",
+    "retry": "Try Again",
+    "noAccount": "Don't have an account?",
+    "register": "Register Now",
+    "errors": {
+      "emailRequired": "Email address is required",
+      "emailInvalid": "Please enter a valid email address",
+      "passwordRequired": "Password is required"
+    }
+  },
+  "share": {
+    "shareSite": "Share ANINO AI"
+  },
+  "homeShowcase": {
+    "loading": "Loading showcase...",
+    "error": "This section is currently unavailable."
+  },
+  "faq": {
+    "title": "Frequently Asked Questions",
+    "q1": {
+      "question": "What is ANINO AI?",
+      "answer": "ANINO AI is an advanced artificial intelligence system for businesses, enabling automated customer replies on WhatsApp, receiving and making smart voice calls, lead management, and multi-channel marketing."
+    },
+    "q2": {
+      "question": "How does the WhatsApp agent work?",
+      "answer": "The WhatsApp agent replies instantly to customers based on the business profile you set, including opening hours, menus, services, prices, and answers to common questions."
+    },
+    "q3": {
+      "question": "Can it make voice calls?",
+      "answer": "Yes, the system allows the AI agent to answer incoming calls or make outbound calls (e.g. returning to leads) in natural language in real-time."
+    },
+    "q4": {
+      "question": "How is billing handled?",
+      "answer": "Billing is based on actual usage charged from a pre-loaded top-up balance, with no expensive fixed monthly subscription fees, so you control your budget completely."
+    }
+  }
+}

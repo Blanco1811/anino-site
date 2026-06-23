@@ -1,0 +1,111 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id                String            @id @default(cuid())
+  firstName         String
+  lastName          String
+  email             String            @unique
+  password          String
+  phone             String?
+  resetToken        String?
+  resetTokenExpires DateTime?
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  
+  agents            Agent[]
+  whatsappSession   WhatsAppSession?
+  businessProfile   BusinessProfile?
+  customers         Customer[]
+}
+
+model Agent {
+  id            String    @id @default(cuid())
+  name          String
+  slug          String    @unique
+  phoneNumber   String?   // Optional during initial phase (before client numbers are purchased)
+  purpose       String
+  status        String    @default("waiting")
+  tone          String[]  // Supported natively in PostgreSQL
+  startTime     String
+  endTime       String
+  scheduledAt   DateTime?
+  userId        String
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  calls         Call[]
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model Call {
+  id            String    @id @default(cuid())
+  agentId       String
+  agent         Agent     @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  number        String
+  purpose       String
+  status        String
+  scheduledAt   DateTime?
+  startedAt     DateTime  @default(now())
+  twilioSid     String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model WhatsAppSession {
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sessionData String?  
+  isActive    Boolean  @default(false)
+  lastQR      String?  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model BusinessProfile {
+  id                    String   @id @default(cuid())
+  userId                String   @unique
+  user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  businessName          String
+  businessType          String
+  description           String
+  openingHours          String
+  address               String
+  deliveryAreas         String
+  phone                 String
+  whatsappNumber        String
+  whatsappPhoneNumberId String?  // Meta phone number ID for inbound webhook filtering
+  menuText              String
+  faqText               String
+  agentInstructions     String
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+}
+
+model Customer {
+  id        String    @id @default(cuid())
+  userId    String    // Scopes customer to the business owner
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  phone     String
+  name      String?
+  messages  Message[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@unique([phone, userId]) // Enforces phone uniqueness per business owner
+}
+
+model Message {
+  id         String   @id @default(cuid())
+  customerId String
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  sender     String   // "customer" or "agent"
+  text       String
+  createdAt  DateTime @default(now())
+}

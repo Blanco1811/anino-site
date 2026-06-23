@@ -1,0 +1,274 @@
+.login-button-container {
+  position: relative;
+}
+
+/* Desktop login button */
+.login-button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: linear-gradient(90deg, #7AC9FF 0%, #AD8CFF 100%);
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.login-button:hover {
+  box-shadow: 0 5px 15px rgba(90, 185, 254, 0.3);
+}
+
+.login-icon {
+  font-size: 1rem;
+}
+
+/* User menu when logged in */
+.user-menu {
+  position: relative;
+}
+
+.user-button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.user-button:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.user-icon {
+  font-size: 1rem;
+  color: #5AB9FE;
+}
+
+.user-name {
+  color: #5AB9FE; /* Added to make username color consistent */
+}
+
+.dropdown-icon {
+  font-size: 0.8rem;
+  transition: transform 0.3s ease;
+}
+
+.dropdown-icon.open {
+  transform: rotate(180deg);
+}
+
+/* User dropdown */
+.user-dropdown {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  right: 0;
+  background: rgba(19, 24, 36, 0.95);
+  backdrop-filter: blur(10px);
+  border-radius: 10px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  width: 200px;
+  z-index: 1000;
+  overflow: hidden;
+}
+
+.dropdown-user-info {
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.dropdown-user-name {
+  font-weight: 600;
+  color: white;
+  font-size: 0.9rem;
+}
+
+.dropdown-user-email {
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.7);
+  word-break: break-all;
+}
+
+.dropdown-divider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.1);
+  margin: 0;
+}
+
+.dropdown-campaign-button,
+.dropdown-logout-button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background: transparent;
+  border: none;
+  font-size: 0.9rem;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.dropdown-campaign-button {
+  color: #5AB9FE;
+}
+
+.dropdown-logout-button {
+  color: #ff6b6b;
+}
+
+.dropdown-campaign-button:hover {
+  background: rgba(90, 185, 254, 0.1);
+}
+
+.dropdown-logout-button:hover {
+  background: rgba(255, 99, 99, 0.1);
+}
+
+/* Mobile styles */
+.mobile-login-button,
+.mobile-campaign-button,
+.mobile-logout-button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.75rem;
+  background: transparent;
+  border: none;
+  color: white;
+  font-size: 1rem;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.mobile-login-button,
+.mobile-campaign-button {
+  color: #5AB9FE;
+}
+
+.mobile-logout-button {
+  color: #ff6b6b;
+}
+
+.mobile-login-button:hover,
+.mobile-campaign-button:hover,
+.mobile-logout-button:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.mobile-user-section {
+  padding: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.mobile-user-greeting {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #5AB9FE; /* Changed to make username color consistent */
+  font-size: 1rem;
+}
+
+/* Login form popup */
+.login-form-popup {
+  position: absolute;
+  top: calc(100% + 0.75rem);
+  
+  /* Position is now controlled by inline styles */
+  background: rgba(19, 24, 36, 0.95);
+  backdrop-filter: blur(10px);
+  border-radius: 16px;
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  width: 320px;
+  z-index: 1000;
+  overflow: auto; /* Changed from hidden to auto to allow scrolling if needed */
+  max-width: 90vw; /* Ensure it doesn't exceed viewport width */
+  max-height: 80vh; /* Reduced from 90vh to give more margin */
+  /* Ensure the popup stays within the viewport on all sides */
+  margin-bottom: 10px;
+}
+
+/* Mobile responsive styles for login form popup */
+@media (max-width: 768px) {
+  .login-form-popup {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, 0) !important;
+    width: 90%;
+    max-width: 350px;
+    right: auto;
+    max-height: 80vh;
+    overflow-y: auto;
+    margin: 0;
+  }
+  
+  /* Ensure the popup is fully visible and centered */
+  body.rtl .login-form-popup,
+  body:not(.rtl) .login-form-popup {
+    left: 50% !important;
+    right: auto !important;
+  }
+  
+  /* Overlay background for mobile popup */
+  .login-form-popup::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: -1;
+  }
+}
+
+/* RTL Support */
+[dir="rtl"] .login-icon,
+[dir="rtl"] .user-icon {
+  margin-left: 0;
+  margin-right: 0;
+}
+
+[dir="rtl"] .user-dropdown,
+[dir="rtl"] .login-form-popup {
+  right: auto;
+  left: 0;
+}
+
+/* Ensure RTL mobile popup is properly centered */
+@media (max-width: 768px) {
+  [dir="rtl"] .login-form-popup {
+    right: auto;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    margin: 0;
+  }
+}
+
+[dir="rtl"] .dropdown-logout-button,
+[dir="rtl"] .dropdown-campaign-button,
+[dir="rtl"] .mobile-login-button,
+[dir="rtl"] .mobile-campaign-button,
+[dir="rtl"] .mobile-logout-button {
+  text-align: right;
+}
