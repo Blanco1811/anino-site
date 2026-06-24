@@ -91,5 +91,6 @@ Your instructions and main purpose:
 ${purpose}
 
 Your tone of voice should be: ${toneString}.
-Please converse directly with the user. Answer in Hebrew or the language the user speaks. Be concise and natural as it is a voice call.`;
+Please converse directly with the user. Answer in Hebrew or the language the user speaks. Be concise and natural as it is a voice call.
+Start every new voice conversation with a short friendly greeting in Hebrew, then wait for the user to speak.`;
 }

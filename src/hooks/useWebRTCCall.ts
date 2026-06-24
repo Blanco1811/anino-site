@@ -12,6 +12,7 @@ export function useWebRTCCall({ sessionApiUrl, agentSlug }: UseWebRTCCallProps) 
 
   const pcRef = useRef<RTCPeerConnection | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
+  const dcRef = useRef<RTCDataChannel | null>(null);
   const callIdRef = useRef<string | null>(null);
   const callTokenRef = useRef<string | null>(null);
 
@@ -55,6 +56,31 @@ export function useWebRTCCall({ sessionApiUrl, agentSlug }: UseWebRTCCallProps) 
 
       // Add local audio track
       newPc.addTrack(stream.getTracks()[0]);
+
+      // Create DataChannel for events
+      const dc = newPc.createDataChannel("oai-events");
+      
+      dc.onopen = () => {
+        console.log("OpenAI WebRTC DataChannel opened.");
+        try {
+          dc.send(JSON.stringify({
+            type: "response.create"
+          }));
+        } catch (err) {
+          console.error("Failed to send response.create over DataChannel:", err);
+        }
+      };
+
+      dc.onmessage = (e) => {
+        try {
+          const event = JSON.parse(e.data);
+          console.log("Received DataChannel event:", event);
+        } catch {
+          console.log("Received raw DataChannel message:", e.data);
+        }
+      };
+
+      dcRef.current = dc;
 
       // Create offer
       const offer = await newPc.createOffer();
@@ -119,6 +145,10 @@ export function useWebRTCCall({ sessionApiUrl, agentSlug }: UseWebRTCCallProps) 
   };
 
   const stopCall = async () => {
+    if (dcRef.current) {
+      dcRef.current.close();
+      dcRef.current = null;
+    }
     if (pcRef.current) {
       pcRef.current.close();
       pcRef.current = null;
@@ -166,6 +196,10 @@ export function useWebRTCCall({ sessionApiUrl, agentSlug }: UseWebRTCCallProps) 
         });
       }
       
+      if (dcRef.current) {
+        dcRef.current.close();
+        dcRef.current = null;
+      }
       if (pcRef.current) {
         pcRef.current.close();
       }
