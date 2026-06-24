@@ -1,6 +1,6 @@
-import { PrismaClient } from '@prisma/client';
 import fs from 'fs';
 import path from 'path';
+import Database from 'better-sqlite3';
 
 // Hebrew special-case mapping dictionary for perfect matching of common names/words
 const HEBREW_SPECIAL_CASES = {
@@ -59,12 +59,23 @@ function slugify(text) {
 }
 
 async function main() {
-  console.log('Starting ANINO data migration...');
+  const isDryRun = process.argv.includes('--dry-run');
+  const sourcePathArgIndex = process.argv.indexOf('--source-path');
+  
+  let coinBffPath = 'C:/anti/coinbff-site-main/coinbff-site-main';
+  if (sourcePathArgIndex !== -1 && process.argv[sourcePathArgIndex + 1]) {
+    coinBffPath = process.argv[sourcePathArgIndex + 1];
+  }
 
-  // Paths to source CoinBFF data
-  const coinBffPath = 'C:/anti/coinbff-site-main/coinbff-site-main';
+  console.log('Starting ANINO data migration...');
+  console.log(`Dry-run mode: ${isDryRun ? 'ENABLED' : 'DISABLED'}`);
+  console.log(`Source path: ${coinBffPath}`);
+
   const sqliteDbPath = path.join(coinBffPath, 'prisma', 'dev.db');
   const agentsJsonPath = path.join(coinBffPath, 'data', 'agents.json');
+
+  console.log(`SQLite DB path: ${sqliteDbPath}`);
+  console.log(`Agents JSON path: ${agentsJsonPath}`);
 
   if (!fs.existsSync(sqliteDbPath)) {
     console.error(`Error: Source SQLite database not found at ${sqliteDbPath}`);
@@ -76,25 +87,118 @@ async function main() {
     process.exit(1);
   }
 
-  // 1. Initialize Prisma client for old SQLite
-  const sqlitePrisma = new PrismaClient({
-    datasources: {
-      db: {
-        url: `file:${sqliteDbPath}`
-      }
-    }
-  });
+  // Load and parse agents.json
+  console.log('\nLoading agents from JSON...');
+  const agentsData = JSON.parse(fs.readFileSync(agentsJsonPath, 'utf8'));
+  console.log(`Found ${agentsData.length} agents to migrate.`);
 
-  // 2. Initialize Prisma client for new PostgreSQL
+  // Collect all unique user IDs that own agents
+  const userIdsWithAgents = new Set();
+  for (const agent of agentsData) {
+    if (agent.userId) {
+      userIdsWithAgents.add(agent.userId);
+    }
+  }
+
+  // Load users from SQLite using better-sqlite3 reader
+  let oldUsers = [];
+  let dbConnection;
+  try {
+    console.log('\nLoading users from SQLite database...');
+    dbConnection = new Database(sqliteDbPath, { readonly: true });
+    
+    // Query users table
+    oldUsers = dbConnection.prepare('SELECT id, firstName, lastName, email, password, phone FROM User').all();
+    console.log(`Found ${oldUsers.length} total users in SQLite.`);
+  } catch (error) {
+    console.error(`Error querying SQLite database: ${error.message}`);
+    process.exit(1);
+  } finally {
+    if (dbConnection) {
+      dbConnection.close();
+    }
+  }
+
+  const oldUserIds = new Set(oldUsers.map(u => u.id));
+
+  // Filter: Only migrate users that have at least one agent
+  const usersToMigrate = oldUsers.filter(u => userIdsWithAgents.has(u.id));
+  const skippedUsersCount = oldUsers.length - usersToMigrate.length;
+  console.log(`Filtered: ${usersToMigrate.length} users own agents and will be migrated (skipped ${skippedUsersCount} users without agents).`);
+
+  if (isDryRun) {
+    console.log('\n==================================================');
+    console.log('                DRY RUN PREVIEW                   ');
+    console.log('==================================================');
+    
+    console.log(`\n[Users to Migrate] Total: ${usersToMigrate.length}`);
+    for (const u of usersToMigrate) {
+      console.log(`  - User: ${u.firstName} ${u.lastName} (${u.email}) [ID: ${u.id}]`);
+    }
+
+    console.log(`\n[Users Skipped (No Agent)] Total: ${skippedUsersCount}`);
+    const skippedUsers = oldUsers.filter(u => !userIdsWithAgents.has(u.id));
+    for (const u of skippedUsers) {
+      console.log(`  - User: ${u.firstName} ${u.lastName} (${u.email}) [ID: ${u.id}]`);
+    }
+
+    console.log(`\n[Agents and Calls Simulation] Total Agents: ${agentsData.length}`);
+    const usedSlugs = new Set();
+    const warnings = [];
+
+    for (const agent of agentsData) {
+      // Validate user exists in SQLite
+      const userExists = oldUserIds.has(agent.userId);
+      if (!userExists) {
+        warnings.push(`Warning: Agent "${agent.name}" (ID: ${agent.id}) has userId "${agent.userId}" which does not exist in the source SQLite database.`);
+      }
+
+      // Generate unique slug
+      let baseSlug = slugify(agent.name) || 'agent';
+      let slug = baseSlug;
+      let counter = 1;
+
+      const hadCollision = RESERVED_SLUGS.has(slug) || usedSlugs.has(slug);
+      while (RESERVED_SLUGS.has(slug) || usedSlugs.has(slug)) {
+        slug = `${baseSlug}-${counter}`;
+        counter++;
+      }
+      usedSlugs.add(slug);
+
+      if (hadCollision) {
+        warnings.push(`Notice: Slug collision resolved for agent "${agent.name}": '${baseSlug}' -> '${slug}'`);
+      }
+
+      const callCount = (agent.calls && Array.isArray(agent.calls)) ? agent.calls.length : 0;
+      console.log(`  - Agent: "${agent.name}"`);
+      console.log(`    Slug: ${slug}`);
+      console.log(`    Owner: ${userExists ? agent.userId : 'UNKNOWN (MISSING USER)'}`);
+      console.log(`    Calls: ${callCount}`);
+    }
+
+    if (warnings.length > 0) {
+      console.log('\n[Potential Issues / Notices]');
+      for (const w of warnings) {
+        console.log(`  [!] ${w}`);
+      }
+    } else {
+      console.log('\n[Potential Issues / Notices]\n  None detected.');
+    }
+
+    console.log('\n==================================================');
+    console.log('Dry run simulation completed successfully.');
+    console.log('No database writes to PostgreSQL or source changes were executed.');
+    console.log('==================================================');
+    return;
+  }
+
+  // 3. Migrate Users (Normal mode) - Load Prisma Client dynamically to prevent importing it in dry run
+  const { PrismaClient } = await import('@prisma/client');
   const postgresPrisma = new PrismaClient();
 
   try {
-    // 3. Migrate Users
-    console.log('Migrating users from SQLite...');
-    const oldUsers = await sqlitePrisma.user.findMany();
-    console.log(`Found ${oldUsers.length} users to migrate.`);
-
-    for (const oldUser of oldUsers) {
+    console.log('\nMigrating users from SQLite to PostgreSQL...');
+    for (const oldUser of usersToMigrate) {
       const newUser = await postgresPrisma.user.upsert({
         where: { email: oldUser.email },
         update: {
@@ -115,11 +219,8 @@ async function main() {
       console.log(`- Scoped user: ${newUser.email} (ID: ${newUser.id})`);
     }
 
-    // 4. Migrate Agents & Calls
-    console.log('\nMigrating agents and calls from JSON...');
-    const agentsData = JSON.parse(fs.readFileSync(agentsJsonPath, 'utf8'));
-    console.log(`Found ${agentsData.length} agents to migrate.`);
-
+    // 4. Migrate Agents & Calls (Normal mode)
+    console.log('\nMigrating agents and calls from JSON to PostgreSQL...');
     const usedSlugs = new Set();
 
     for (const agent of agentsData) {
@@ -204,9 +305,9 @@ async function main() {
   } catch (error) {
     console.error('Migration failed with error:', error);
   } finally {
-    // Close Prisma connections
-    await sqlitePrisma.$disconnect();
-    await postgresPrisma.$disconnect();
+    if (postgresPrisma) {
+      await postgresPrisma.$disconnect();
+    }
   }
 }
 
