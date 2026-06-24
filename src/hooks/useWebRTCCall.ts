@@ -37,8 +37,8 @@ export function useWebRTCCall({ sessionApiUrl, agentSlug }: UseWebRTCCallProps) 
       }
       const data = await res.json();
       
-      // OpenAI Realtime API returns client_secret.value in different structures depending on endpoint
-      const ephemeralKey = data.client_secret?.value || data.client_secret;
+      // OpenAI Realtime API returns ephemeral token in data.value (client_secrets endpoint)
+      const ephemeralKey = data.value || data.client_secret?.value || data.client_secret;
       if (!ephemeralKey) {
         throw new Error('מפתח גישה קצר-טווח לא התקבל משרת ה-AI.');
       }
@@ -60,9 +60,8 @@ export function useWebRTCCall({ sessionApiUrl, agentSlug }: UseWebRTCCallProps) 
       const offer = await newPc.createOffer();
       await newPc.setLocalDescription(offer);
 
-      // Exchange SDP with OpenAI Realtime API
-      const model = 'gpt-4o-realtime-preview-2024-12-17';
-      const openaiRes = await fetch(`https://api.openai.com/v1/realtime?model=${model}`, {
+      // Exchange SDP with OpenAI Realtime API (WebRTC Calls endpoint)
+      const openaiRes = await fetch('https://api.openai.com/v1/realtime/calls', {
         method: 'POST',
         body: offer.sdp,
         headers: {

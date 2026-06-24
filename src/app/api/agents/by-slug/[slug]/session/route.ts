@@ -27,17 +27,24 @@ export async function POST(
     }
 
     // Request ephemeral session token from OpenAI Realtime API using unified getAgentInstructions
-    const response = await fetch('https://api.openai.com/v1/realtime/sessions', {
+    const response = await fetch('https://api.openai.com/v1/realtime/client_secrets', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${apiKey}`,
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'OpenAI-Safety-Identifier': 'anino-browser-session'
       },
       body: JSON.stringify({
-        model: 'gpt-4o-realtime-preview-2024-12-17',
-        voice: 'alloy',
-        modalities: ['text', 'audio'],
-        instructions: getAgentInstructions(agent)
+        session: {
+          type: 'realtime',
+          model: 'gpt-realtime-2',
+          audio: {
+            output: {
+              voice: 'alloy'
+            }
+          },
+          instructions: getAgentInstructions(agent)
+        }
       })
     });
 

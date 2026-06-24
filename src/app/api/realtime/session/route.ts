@@ -47,17 +47,24 @@ export async function POST(request: NextRequest) {
       : 'You are a low-latency voice agent.';
 
     // 4. Request ephemeral session token from OpenAI Realtime API
-    const response = await fetch('https://api.openai.com/v1/realtime/sessions', {
+    const response = await fetch('https://api.openai.com/v1/realtime/client_secrets', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${apiKey}`,
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'OpenAI-Safety-Identifier': 'anino-browser-session'
       },
       body: JSON.stringify({
-        model: 'gpt-4o-realtime-preview-2024-12-17',
-        voice: 'alloy',
-        modalities: ['text', 'audio'],
-        instructions: instructions
+        session: {
+          type: 'realtime',
+          model: 'gpt-realtime-2',
+          audio: {
+            output: {
+              voice: 'alloy'
+            }
+          },
+          instructions: instructions
+        }
       })
     });
 
