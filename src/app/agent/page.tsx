@@ -54,6 +54,13 @@ export default function AgentPage() {
   // Link copy and new agent link states
   const [linkCopied, setLinkCopied] = useState(false);
   const [createdAgentLink, setCreatedAgentLink] = useState<string | null>(null);
+  const [origin, setOrigin] = useState('');
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setOrigin(window.location.origin);
+    }
+  }, []);
 
   // Fetch or create voice agent
   const fetchOrCreateAgent = async () => {
@@ -87,7 +94,7 @@ export default function AgentPage() {
           const createData = await createRes.json();
           setAgent(createData.agent);
           if (createData.agent.slug) {
-            setCreatedAgentLink(`https://agent.anino-ai.com/${createData.agent.slug}`);
+            setCreatedAgentLink(`${origin}/${createData.agent.slug}`);
             setTimeout(() => setCreatedAgentLink(null), 10000);
           }
         } else {
@@ -262,7 +269,7 @@ export default function AgentPage() {
   // Copy public agent link function
   const copyPublicLink = () => {
     if (agent?.slug) {
-      const publicLink = `https://agent.anino-ai.com/${agent.slug}`;
+      const publicLink = `${origin}/${agent.slug}`;
       navigator.clipboard.writeText(publicLink);
       setLinkCopied(true);
       setTimeout(() => setLinkCopied(false), 2000);
@@ -619,8 +626,8 @@ export default function AgentPage() {
                 <div className="info-item">
                   <span className="info-label">קישור ציבורי לסוכן (Public Link):</span>
                   <div className="public-link-box">
-                    <a href={`https://agent.anino-ai.com/${agent.slug}`} target="_blank" rel="noopener noreferrer" className="public-link-text">
-                      https://agent.anino-ai.com/{agent.slug}
+                    <a href={`${origin}/${agent.slug}`} target="_blank" rel="noopener noreferrer" className="public-link-text">
+                      {origin}/{agent.slug}
                     </a>
                     <button onClick={copyPublicLink} className="copy-link-btn">
                       {linkCopied ? 'הועתק!' : 'Copy public agent link'}
