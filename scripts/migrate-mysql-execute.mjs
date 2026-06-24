@@ -347,7 +347,14 @@ async function main() {
     }
 
     const report = {
-      users: { inserted: 0, skipped: 0, conflicts: [], emailConflicts: [] },
+      users: {
+        inserted: 0,
+        skipped: 0,
+        noAgentSkipped: 0,
+        idempotencySkipped: 0,
+        conflicts: [],
+        emailConflicts: []
+      },
       agents: { inserted: 0, skipped: 0, conflicts: [], renamedSlugs: [] },
       calls: { inserted: 0, skipped: 0, conflicts: [] },
       knowledge: { inserted: 0, skipped: 0, conflicts: [] },
@@ -362,6 +369,7 @@ async function main() {
     for (const acc of accountsRows) {
       // Rule: Only migrate users who own at least one agent
       if (!activeAccountIds.has(acc.id)) {
+        report.users.noAgentSkipped++;
         report.users.skipped++;
         continue;
       }
@@ -378,6 +386,7 @@ async function main() {
           report.warnings.push(`User Conflict: Legacy Account ID ${acc.id} exists in ANINO but has differing data. Skipping write.`);
           activeAccountIds.delete(acc.id);
         } else {
+          report.users.idempotencySkipped++;
           report.users.skipped++; // Matches exactly, skip
         }
         continue;
@@ -530,10 +539,11 @@ async function main() {
       console.log('==================================================');
       
       console.log(`\n[Accounts Statistics]`);
+      console.log(`- Total MySQL Accounts: ${accountsRows.length}`);
       console.log(`- Accounts to Migrate: ${accountsToMigrate.length}`);
-      console.log(`- Accounts Skipped (No Agent): ${skippedAccountsCount}`);
-      console.log(`- Accounts Skipped (Idempotency skip): ${report.users.skipped}`);
-      console.log(`- Accounts in Conflict: ${report.users.conflicts.length}`);
+      console.log(`- Accounts Skipped (No Agent): ${report.users.noAgentSkipped}`);
+      console.log(`- Accounts Skipped (Idempotency skip): ${report.users.idempotencySkipped}`);
+      console.log(`- Accounts in Conflict (legacy ID data differs): ${report.users.conflicts.length}`);
       console.log(`- Email Conflicts Skipped: ${report.users.emailConflicts.length}`);
       
       console.log(`\n[Agents Statistics]`);
