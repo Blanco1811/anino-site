@@ -7,6 +7,29 @@ generator client {
   provider = "prisma-client-js"
 }
 
+model MigrationRun {
+  id               String           @id @default(cuid())
+  runId            String           @unique
+  mode             String           // "dry_run", "execute", "rollback"
+  status           String           // "started", "completed", "failed", "rolled_back"
+  errorMessage     String?
+  rollbackOfRunId  String?
+  startedAt        DateTime         @default(now())
+  finishedAt       DateTime?
+  createdBy        String?
+  usersCreated     Int              @default(0)
+  agentsCreated    Int              @default(0)
+  callsCreated     Int              @default(0)
+  knowledgeCreated Int              @default(0)
+  conflictsCount   Int              @default(0)
+  reportJson       String?          // Log conflict details or rollback results
+  
+  users            User[]
+  agents           Agent[]
+  calls            Call[]
+  knowledge        AgentKnowledge[]
+}
+
 model User {
   id                String            @id @default(cuid())
   firstName         String
@@ -19,10 +42,17 @@ model User {
   createdAt         DateTime          @default(now())
   updatedAt         DateTime          @updatedAt
   
+  legacyAccountId   Int?              @unique
+  legacyBalance     Decimal?
+  migrationRunId    String?
+  migrationRun      MigrationRun?     @relation(fields: [migrationRunId], references: [id])
+  
   agents            Agent[]
   whatsappSession   WhatsAppSession?
   businessProfile   BusinessProfile?
   customers         Customer[]
+
+  @@index([migrationRunId])
 }
 
 model Agent {
@@ -33,14 +63,23 @@ model Agent {
   purpose       String
   status        String    @default("waiting")
   tone          String[]  // Supported natively in PostgreSQL
-  startTime     String
-  endTime       String
+  startTime     String?   // Made optional to support legacy null values
+  endTime       String?   // Made optional to support legacy null values
   scheduledAt   DateTime?
   userId        String
   user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   calls         Call[]
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
+
+  legacyAgentId  Int?              @unique
+  imageUrl       String?   // For agent avatar image
+  greeting       String?   // Legacy initial agent greeting
+  migrationRunId String?
+  migrationRun   MigrationRun?     @relation(fields: [migrationRunId], references: [id])
+  knowledge      AgentKnowledge[]
+
+  @@index([migrationRunId])
 }
 
 model Call {
@@ -51,10 +90,41 @@ model Call {
   purpose       String
   status        String
   scheduledAt   DateTime?
-  startedAt     DateTime  @default(now())
+  startedAt     DateTime? // Made optional to support legacy nulls (no fake timestamps)
   twilioSid     String?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
+
+  legacyCallId            Int?              @unique
+  direction               String?
+  tries                   Int?
+  transcript              String?
+  recordingUrl            String?
+  retellCallId            String?
+  durationSeconds         Int?
+  errorMessage            String?
+  lastSchedulerAttemptAt  DateTime?
+  endedAt                 DateTime?
+  migrationRunId          String?
+  migrationRun            MigrationRun?     @relation(fields: [migrationRunId], references: [id])
+
+  @@index([migrationRunId])
+}
+
+model AgentKnowledge {
+  id             String        @id @default(cuid())
+  agentId        String
+  agent          Agent         @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  content        String
+  link           String?
+  title          String?
+  legacyId       Int?          @unique
+  migrationRunId String?
+  migrationRun   MigrationRun? @relation(fields: [migrationRunId], references: [id])
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  @@index([migrationRunId])
 }
 
 model WhatsAppSession {

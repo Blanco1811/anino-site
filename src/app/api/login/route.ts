@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-import { hashPassword } from '@/lib/auth';
+import { hashPassword, comparePassword } from '@/lib/auth';
 import { SignJWT } from 'jose';
 import { JWT_CONFIG } from '@/lib/config';
 
@@ -22,12 +22,29 @@ export async function POST(request: NextRequest) {
       where: { email }
     });
 
-    // If user doesn't exist or password doesn't match
-    if (!user || user.password !== hashPassword(password)) {
+    if (!user) {
       return NextResponse.json(
         { error: 'Invalid email or password' },
         { status: 401 }
       );
+    }
+
+    const authResult = await comparePassword(password, user.password);
+    if (!authResult.isValid) {
+      return NextResponse.json(
+        { error: 'Invalid email or password' },
+        { status: 401 }
+      );
+    }
+
+    // Lazy password hash upgrade
+    if (authResult.needsUpgrade) {
+      const newHash = await hashPassword(password);
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { password: newHash }
+      });
+      console.log(`Password hash for user ${user.email} successfully upgraded to Bcrypt.`);
     }
 
     // Create a JWT token
