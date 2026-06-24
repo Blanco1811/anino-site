@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useWebRTCCall } from '@/hooks/useWebRTCCall';
 
 interface Agent {
   id: string;
@@ -35,12 +36,17 @@ export default function AgentPage() {
   const [dialError, setDialError] = useState<string | null>(null);
   const [dialSuccess, setDialSuccess] = useState<string | null>(null);
 
-  // WebRTC Browser Call states
-  const [pc, setPc] = useState<RTCPeerConnection | null>(null);
-  const [localStream, setLocalStream] = useState<MediaStream | null>(null);
-  const [isWebRTCOn, setIsWebRTCOn] = useState(false);
-  const [webRTCLoading, setWebRTCLoading] = useState(false);
-  const [webRTCError, setWebRTCError] = useState<string | null>(null);
+  // WebRTC Browser Call using reusable hook
+  const {
+    isWebRTCOn,
+    webRTCLoading,
+    webRTCError,
+    startCall,
+    stopCall
+  } = useWebRTCCall({
+    sessionApiUrl: '/api/realtime/session',
+    agentSlug: agent?.slug
+  });
 
   // Edit agent modal states
   const [showEditModal, setShowEditModal] = useState(false);
@@ -182,89 +188,7 @@ export default function AgentPage() {
     }
   };
 
-  // WebRTC Peer Connection Logic
-  const startWebRTC = async () => {
-    setWebRTCLoading(true);
-    setWebRTCError(null);
-    try {
-      // 1. Request microphone access
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      setLocalStream(stream);
 
-      // 2. Request ephemeral token
-      const res = await fetch('/api/realtime/session', { method: 'POST' });
-      if (!res.ok) {
-        const errJson = await res.json().catch(() => ({ error: 'שגיאה בקבלת מפתח גישה' }));
-        throw new Error(errJson.error || 'Failed to initialize session');
-      }
-      const data = await res.json();
-      const ephemeralKey = data.client_secret.value;
-
-      // 3. Setup RTCPeerConnection
-      const newPc = new RTCPeerConnection();
-      
-      // Play remote audio
-      const audioEl = document.createElement('audio');
-      audioEl.autoplay = true;
-      newPc.ontrack = (e) => {
-        audioEl.srcObject = e.streams[0];
-      };
-
-      // Add local audio track
-      newPc.addTrack(stream.getTracks()[0]);
-
-      // Create offer
-      const offer = await newPc.createOffer();
-      await newPc.setLocalDescription(offer);
-
-      // Exchange SDP with OpenAI Realtime API
-      const model = 'gpt-4o-realtime-preview-2024-12-17';
-      const openaiRes = await fetch(`https://api.openai.com/v1/realtime?model=${model}`, {
-        method: 'POST',
-        body: offer.sdp,
-        headers: {
-          Authorization: `Bearer ${ephemeralKey}`,
-          'Content-Type': 'application/sdp',
-        },
-      });
-
-      if (!openaiRes.ok) {
-        const errSdp = await openaiRes.text();
-        throw new Error(`OpenAI Handshake Failed: ${errSdp}`);
-      }
-
-      const answerSdp = await openaiRes.text();
-      await newPc.setRemoteDescription(new RTCSessionDescription({
-        type: 'answer',
-        sdp: answerSdp,
-      }));
-
-      setPc(newPc);
-      setIsWebRTCOn(true);
-    } catch (err: any) {
-      console.error(err);
-      setWebRTCError(err.message || 'לא ניתן היה להתחבר למיקרופון או לשרת.');
-      // Stop stream tracks if there was an error
-      if (localStream) {
-        localStream.getTracks().forEach(t => t.stop());
-        setLocalStream(null);
-      }
-    } finally {
-      setWebRTCLoading(false);
-    }
-  };
-
-  const stopWebRTC = () => {
-    if (pc) {
-      pc.close();
-      setPc(null);
-    }
-    if (localStream) {
-      localStream.getTracks().forEach(t => t.stop());
-      setLocalStream(null);
-    }
-    setIsWebRTCOn(false);
-  };
 
   // Copy public agent link function
   const copyPublicLink = () => {
@@ -343,13 +267,7 @@ export default function AgentPage() {
     }
   };
 
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      if (pc) pc.close();
-      if (localStream) localStream.getTracks().forEach(t => t.stop());
-    };
-  }, [pc, localStream]);
+
 
   if (isLoading) {
     return (
@@ -589,16 +507,16 @@ export default function AgentPage() {
 
               {/* Interactive buttons */}
               <div className="action-buttons-group">
-                {!isWebRTCOn ? (
+                 {!isWebRTCOn ? (
                   <button 
-                    onClick={startWebRTC} 
+                    onClick={startCall} 
                     className="btn btn-primary"
                     disabled={webRTCLoading}
                   >
                     {webRTCLoading ? 'מתחבר למיקרופון...' : 'דברו עם הסוכן (בדפדפן)'}
                   </button>
                 ) : (
-                  <button onClick={stopWebRTC} className="btn btn-danger">
+                  <button onClick={stopCall} className="btn btn-danger">
                     נתק שיחה
                   </button>
                 )}
