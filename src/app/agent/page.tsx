@@ -14,6 +14,25 @@ interface Agent {
   slug?: string;
 }
 
+const formatStatus = (status?: string) => {
+  if (!status) return '';
+  const s = status.toLowerCase();
+  if (s === 'waiting') return 'ממתין';
+  if (s === 'in_progress') return 'בשיחה';
+  if (s === 'completed') return 'הושלם';
+  return status;
+};
+
+const formatTone = (tone?: string) => {
+  if (!tone) return '';
+  const t = tone.toLowerCase();
+  if (t === 'friendly') return 'ידידותי';
+  if (t === 'professional') return 'מקצועי';
+  if (t === 'empathetic') return 'אמפתי';
+  if (t === 'humorous') return 'הומוריסטי';
+  return tone;
+};
+
 export default function AgentPage() {
   const { user, isLoading, login, logout, isAuthenticated } = useAuth();
 
@@ -75,7 +94,7 @@ export default function AgentPage() {
     try {
       const res = await fetch('/api/agents');
       if (res.status === 401) {
-        setAgentError('Unauthorized');
+        setAgentError('אין הרשאה');
         return;
       }
       if (!res.ok) {
@@ -171,7 +190,7 @@ export default function AgentPage() {
         throw new Error(data.error || 'התקשרות נכשלה מסיבה לא ידועה.');
       }
 
-      setDialSuccess(`השיחה הועברה בהצלחה! מספר מזהה לשיחה: ${data.twilioCallSid || 'N/A'}`);
+      setDialSuccess(`השיחה הועברה בהצלחה! מספר מזהה לשיחה: ${data.twilioCallSid || 'לא זמין'}`);
       setPhoneNumber('');
       setCallGoal('');
       
@@ -449,7 +468,7 @@ export default function AgentPage() {
             alt="ANINO Logo" 
             style={{ height: '36px', width: 'auto', objectFit: 'contain' }} 
           />
-          <h1>סוכן קולי חכם (AI Voice Agent)</h1>
+          <h1>סוכן קולי חכם</h1>
         </div>
         <div className="user-section">
           <span>שלום, {user?.name || user?.email}</span>
@@ -542,13 +561,13 @@ export default function AgentPage() {
 
               {agent?.slug && (
                 <div className="info-item">
-                  <span className="info-label">קישור ציבורי לסוכן (Public Link):</span>
+                  <span className="info-label">קישור ציבורי לסוכן:</span>
                   <div className="public-link-box">
                     <a href={`${origin}/${agent.slug}`} target="_blank" rel="noopener noreferrer" className="public-link-text">
                       {origin}/{agent.slug}
                     </a>
                     <button onClick={copyPublicLink} className="copy-link-btn">
-                      {linkCopied ? 'הועתק!' : 'Copy public agent link'}
+                      {linkCopied ? 'הועתק!' : 'העתק קישור ציבורי'}
                     </button>
                   </div>
                 </div>
@@ -556,7 +575,7 @@ export default function AgentPage() {
               
               <div className="info-item">
                 <span className="info-label">סטטוס סוכן:</span>
-                <span className="info-val highlight">{agent?.status}</span>
+                <span className="info-val highlight">{formatStatus(agent?.status)}</span>
               </div>
 
               <div className="info-item">
@@ -568,7 +587,7 @@ export default function AgentPage() {
                 <span className="info-label">טון דיבור מוגדר:</span>
                 <div className="tag-container">
                   {agent?.tone.map((t, idx) => (
-                    <span key={idx} className="tag-pill">{t}</span>
+                    <span key={idx} className="tag-pill">{formatTone(t)}</span>
                   ))}
                 </div>
               </div>
@@ -677,10 +696,10 @@ export default function AgentPage() {
                         onChange={() => handleToneChange(t)}
                         style={{ cursor: 'pointer' }}
                       />
-                      {t === 'professional' ? 'מקצועי (professional)' :
-                       t === 'friendly' ? 'ידידותי (friendly)' :
-                       t === 'empathetic' ? 'אמפתי (empathetic)' :
-                       t === 'humorous' ? 'הומוריסטי (humorous)' : t}
+                      {t === 'professional' ? 'מקצועי' :
+                       t === 'friendly' ? 'ידידותי' :
+                       t === 'empathetic' ? 'אמפתי' :
+                       t === 'humorous' ? 'הומוריסטי' : t}
                     </label>
                   ))}
                 </div>

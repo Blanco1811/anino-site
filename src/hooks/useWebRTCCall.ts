@@ -34,7 +34,7 @@ export function useWebRTCCall({ sessionApiUrl, agentSlug }: UseWebRTCCallProps) 
       const res = await fetch(sessionApiUrlRef.current, { method: 'POST' });
       if (!res.ok) {
         const errJson = await res.json().catch(() => ({ error: 'שגיאה בקבלת מפתח גישה' }));
-        throw new Error(errJson.error || 'Failed to initialize session');
+        throw new Error(errJson.error || 'לא ניתן להתחיל שיחה');
       }
       const data = await res.json();
       
@@ -98,7 +98,7 @@ export function useWebRTCCall({ sessionApiUrl, agentSlug }: UseWebRTCCallProps) 
 
       if (!openaiRes.ok) {
         const errSdp = await openaiRes.text();
-        throw new Error(`OpenAI Handshake Failed: ${errSdp}`);
+        throw new Error(`החיבור לסוכן נכשל: ${errSdp}`);
       }
 
       const answerSdp = await openaiRes.text();
