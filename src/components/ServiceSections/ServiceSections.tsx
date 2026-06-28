@@ -165,6 +165,31 @@ const ServiceSections: React.FC = () => {
                       כניסה לסוכן השיחות
                     </motion.a>
                   )}
+
+                  {service.id === 'social-marketing' && (
+                    <motion.a
+                      href="https://marketing.staging.anino-ai.com"
+                      whileHover={{ scale: 1.03 }}
+                      whileTap={{ scale: 0.97 }}
+                      className="service-action-btn"
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        marginTop: '24px',
+                        backgroundColor: service.color,
+                        color: '#fff',
+                        padding: '12px 24px',
+                        borderRadius: '8px',
+                        fontWeight: 'bold',
+                        textDecoration: 'none',
+                        fontSize: '15px',
+                        boxShadow: `0 4px 14px ${service.color}25`
+                      }}
+                    >
+                      כניסה
+                    </motion.a>
+                  )}
                 </motion.div>
 
                 {/* Decorative Visual Side */}
