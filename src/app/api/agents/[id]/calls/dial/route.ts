@@ -60,8 +60,18 @@ export async function POST(
       formattedNumber = '+972' + formattedNumber.slice(1);
     }
 
-    // Use Twilio Service to make the call
-    const twilioCall = await TwilioService.initiateCall(formattedNumber, goal);
+    // Send Twilio to the ANINO realtime voice webhook for this agent.
+    const publicBaseUrl =
+      process.env.TWILIO_PUBLIC_BASE_URL || 'https://staging.anino-ai.com';
+
+    const twimlUrl =
+      `${publicBaseUrl}/api/twilio/voice?agentId=${encodeURIComponent(id)}`;
+
+    const twilioCall = await TwilioService.initiateCall(
+      formattedNumber,
+      goal,
+      twimlUrl
+    );
 
     if (!twilioCall.success) {
       return NextResponse.json({

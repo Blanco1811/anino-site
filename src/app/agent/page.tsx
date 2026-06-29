@@ -41,6 +41,11 @@ export default function AgentPage() {
   const [password, setPassword] = useState('');
   const [loginError, setLoginError] = useState<string | null>(null);
   const [loginLoading, setLoginLoading] = useState(false);
+  const [isRegisterMode, setIsRegisterMode] = useState(false);
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [phone, setPhone] = useState('');
+  const [registerLoading, setRegisterLoading] = useState(false);
 
   // Agent workspace states
   const [agent, setAgent] = useState<Agent | null>(null);
@@ -80,6 +85,11 @@ export default function AgentPage() {
   const [linkCopied, setLinkCopied] = useState(false);
   const [createdAgentLink, setCreatedAgentLink] = useState<string | null>(null);
   const [origin, setOrigin] = useState('');
+  const [showCreateAgentForm, setShowCreateAgentForm] = useState(false);
+  const [newAgentName, setNewAgentName] = useState('');
+  const [newAgentPurpose, setNewAgentPurpose] = useState('');
+  const [createAgentLoading, setCreateAgentLoading] = useState(false);
+  const [createAgentError, setCreateAgentError] = useState<string | null>(null);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -105,31 +115,58 @@ export default function AgentPage() {
       if (data.items && data.items.length > 0) {
         setAgent(data.items[0]);
       } else {
-        // Create default agent if none exists
-        const createRes = await fetch('/api/agents', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            name: 'Michael',
-            purpose: 'תשובות לשאלות נפוצות על המערכת והסבר כללי.',
-            tone: ['professional', 'friendly']
-          })
-        });
-        if (createRes.ok) {
-          const createData = await createRes.json();
-          setAgent(createData.agent);
-          if (createData.agent.slug) {
-            setCreatedAgentLink(`${origin}/${createData.agent.slug}`);
-            setTimeout(() => setCreatedAgentLink(null), 10000);
-          }
-        } else {
-          throw new Error('Failed to create default agent');
-        }
+        setAgent(null);
       }
     } catch (err: any) {
       setAgentError(err.message || 'אירעה שגיאה בטעינת נתוני הסוכן.');
     } finally {
       setAgentLoading(false);
+    }
+  };
+
+  const handleCreateAgent = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    const name = newAgentName.trim();
+    const purpose = newAgentPurpose.trim();
+
+    if (!name) {
+      setCreateAgentError('יש להזין שם לסוכן.');
+      return;
+    }
+
+    setCreateAgentLoading(true);
+    setCreateAgentError(null);
+
+    try {
+      const res = await fetch('/api/agents', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name,
+          purpose,
+          phoneNumber: '',
+          tone: [],
+          startTime: '',
+          endTime: ''
+        })
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || 'יצירת הסוכן נכשלה.');
+      }
+
+      setAgent(data.agent);
+      setCreatedAgentLink(`${window.location.origin}/${data.agent.slug}`);
+      setShowCreateAgentForm(false);
+      setNewAgentName('');
+      setNewAgentPurpose('');
+    } catch (err: any) {
+      setCreateAgentError(err.message || 'אירעה שגיאה ביצירת הסוכן.');
+    } finally {
+      setCreateAgentLoading(false);
     }
   };
 
@@ -152,6 +189,44 @@ export default function AgentPage() {
       setLoginError('חיבור השרת נכשל');
     } finally {
       setLoginLoading(false);
+    }
+  };
+
+  const handleRegisterSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoginError(null);
+    setRegisterLoading(true);
+
+    try {
+      const registerRes = await fetch('/api/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          firstName: firstName.trim(),
+          lastName: lastName.trim(),
+          email: email.trim(),
+          password,
+          phone: phone.trim()
+        })
+      });
+
+      const registerData = await registerRes.json();
+
+      if (!registerRes.ok) {
+        throw new Error(registerData.error || 'יצירת החשבון נכשלה.');
+      }
+
+      const loginRes = await login(email.trim(), password);
+
+      if (!loginRes.success) {
+        setLoginError('החשבון נוצר בהצלחה. התחבר עם פרטי החשבון שלך.');
+        setIsRegisterMode(false);
+        return;
+      }
+    } catch (err: any) {
+      setLoginError(err.message || 'אירעה שגיאה ביצירת החשבון.');
+    } finally {
+      setRegisterLoading(false);
     }
   };
 
@@ -328,38 +403,97 @@ export default function AgentPage() {
     return (
       <div className="login-screen" dir="rtl">
         <div className="login-card">
-          <h2>כניסה למערכת הסוכן</h2>
-          <p className="desc">התחבר כדי לנהל את סוכן ה-AI הקולי ולהתחיל שיחה</p>
-          
+          <h2>{isRegisterMode ? 'פתיחת חשבון חדש' : 'כניסה למערכת הסוכן'}</h2>
+          <p className="desc">
+            {isRegisterMode
+              ? 'פתח חשבון והתחל ליצור את הסוכן הקולי שלך'
+              : 'התחבר כדי לנהל את סוכן ה-AI הקולי ולהתחיל שיחה'}
+          </p>
+
           {loginError && <div className="error-banner">{loginError}</div>}
-          
-          <form onSubmit={handleLoginSubmit}>
+
+          <form onSubmit={isRegisterMode ? handleRegisterSubmit : handleLoginSubmit}>
+            {isRegisterMode && (
+              <>
+                <div className="form-group">
+                  <label>שם פרטי</label>
+                  <input
+                    type="text"
+                    value={firstName}
+                    onChange={e => setFirstName(e.target.value)}
+                    placeholder="ישראל"
+                    required
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>שם משפחה</label>
+                  <input
+                    type="text"
+                    value={lastName}
+                    onChange={e => setLastName(e.target.value)}
+                    placeholder="ישראלי"
+                    required
+                  />
+                </div>
+              </>
+            )}
+
             <div className="form-group">
               <label>דואר אלקטרוני</label>
-              <input 
-                type="email" 
-                value={email} 
-                onChange={e => setEmail(e.target.value)} 
-                placeholder="you@example.com" 
-                required 
+              <input
+                type="email"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                placeholder="you@example.com"
+                required
               />
             </div>
-            
+
+            {isRegisterMode && (
+              <div className="form-group">
+                <label>מספר טלפון</label>
+                <input
+                  type="tel"
+                  value={phone}
+                  onChange={e => setPhone(e.target.value)}
+                  placeholder="0500000000"
+                />
+              </div>
+            )}
+
             <div className="form-group">
               <label>סיסמה</label>
-              <input 
-                type="password" 
-                value={password} 
-                onChange={e => setPassword(e.target.value)} 
-                placeholder="********" 
-                required 
+              <input
+                type="password"
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                placeholder="********"
+                required
               />
             </div>
-            
-            <button type="submit" className="login-btn" disabled={loginLoading}>
-              {loginLoading ? 'מתחבר...' : 'התחבר למערכת'}
+
+            <button
+              type="submit"
+              className="login-btn"
+              disabled={isRegisterMode ? registerLoading : loginLoading}
+            >
+              {isRegisterMode
+                ? (registerLoading ? 'יוצר חשבון...' : 'צור חשבון')
+                : (loginLoading ? 'מתחבר...' : 'התחבר למערכת')}
             </button>
           </form>
+
+          <button
+            type="button"
+            className="mode-switch-btn"
+            onClick={() => {
+              setLoginError(null);
+              setIsRegisterMode(current => !current);
+            }}
+          >
+            {isRegisterMode ? 'כבר יש לך חשבון? התחבר' : 'אין לך חשבון? פתח חשבון חדש'}
+          </button>
         </div>
 
         <style jsx>{`
@@ -452,6 +586,19 @@ export default function AgentPage() {
             transform: none;
             box-shadow: none;
           }
+          .mode-switch-btn {
+            width: 100%;
+            margin-top: 16px;
+            border: 0;
+            background: transparent;
+            color: #45f3ff;
+            font-size: 14px;
+            cursor: pointer;
+            text-decoration: underline;
+          }
+          .mode-switch-btn:hover {
+            color: #00D09C;
+          }
         `}</style>
       </div>
     );
@@ -478,6 +625,121 @@ export default function AgentPage() {
 
       {/* Main Panel */}
       <main className="dash-main">
+        {showCreateAgentForm && (
+          <div
+            style={{
+              position: 'fixed',
+              inset: 0,
+              zIndex: 1000,
+              background: 'rgba(0, 0, 0, 0.72)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '20px'
+            }}
+          >
+            <form
+              onSubmit={handleCreateAgent}
+              style={{
+                width: '100%',
+                maxWidth: '500px',
+                background: '#1f2833',
+                border: '1px solid rgba(69,243,255,0.35)',
+                borderRadius: '20px',
+                padding: '30px',
+                boxShadow: '0 20px 60px rgba(0,0,0,0.5)'
+              }}
+            >
+              <h2 style={{ color: '#ffffff', marginTop: 0, marginBottom: '12px' }}>
+                יצירת סוכן קולי חדש
+              </h2>
+
+              <p style={{ color: '#b9c4d0', lineHeight: '1.6', marginBottom: '22px' }}>
+                תן לסוכן שם והסבר קצר מה הוא אמור לעשות.
+              </p>
+
+              <label style={{ display: 'block', color: '#ffffff', marginBottom: '8px' }}>
+                שם הסוכן
+              </label>
+              <input
+                value={newAgentName}
+                onChange={(e) => setNewAgentName(e.target.value)}
+                placeholder="לדוגמה: סוכן המסעדה"
+                autoFocus
+                style={{
+                  width: '100%',
+                  boxSizing: 'border-box',
+                  padding: '13px',
+                  borderRadius: '10px',
+                  border: '1px solid #52606d',
+                  background: '#111820',
+                  color: '#ffffff',
+                  marginBottom: '18px',
+                  fontSize: '16px'
+                }}
+              />
+
+              <label style={{ display: 'block', color: '#ffffff', marginBottom: '8px' }}>
+                מה הסוכן עושה?
+              </label>
+              <textarea
+                value={newAgentPurpose}
+                onChange={(e) => setNewAgentPurpose(e.target.value)}
+                placeholder="לדוגמה: מקבל הזמנות, עונה ללקוחות ומסביר על השירותים."
+                rows={4}
+                style={{
+                  width: '100%',
+                  boxSizing: 'border-box',
+                  padding: '13px',
+                  borderRadius: '10px',
+                  border: '1px solid #52606d',
+                  background: '#111820',
+                  color: '#ffffff',
+                  marginBottom: '12px',
+                  fontSize: '16px',
+                  resize: 'vertical'
+                }}
+              />
+
+              {createAgentError && (
+                <p style={{ color: '#ff8a8a', margin: '8px 0 16px' }}>
+                  {createAgentError}
+                </p>
+              )}
+
+              <div style={{ display: 'flex', gap: '12px', marginTop: '18px' }}>
+                <button
+                  type="submit"
+                  className="btn btn-primary"
+                  disabled={createAgentLoading}
+                  style={{ flex: 1, padding: '13px', borderRadius: '10px' }}
+                >
+                  {createAgentLoading ? 'יוצר סוכן...' : 'צור סוכן'}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowCreateAgentForm(false);
+                    setCreateAgentError(null);
+                  }}
+                  style={{
+                    flex: 1,
+                    padding: '13px',
+                    borderRadius: '10px',
+                    border: '1px solid #52606d',
+                    background: 'transparent',
+                    color: '#ffffff',
+                    cursor: 'pointer'
+                  }}
+                >
+                  ביטול
+                </button>
+              </div>
+            </form>
+          </div>
+        )}
+
         {createdAgentLink && (
           <div className="new-agent-success-banner">
             <strong>סוכן קולי נוצר בהצלחה!</strong>
@@ -497,6 +759,81 @@ export default function AgentPage() {
             <p>{agentError}</p>
             <button onClick={fetchOrCreateAgent} className="retry-btn">נסה שוב</button>
           </div>
+        ) : !agent ? (
+          <section
+            style={{
+              minHeight: 'calc(100vh - 76px)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '40px 20px',
+              background: 'radial-gradient(circle at center, rgba(69,243,255,0.12), transparent 38%), #0b0c10'
+            }}
+          >
+            <div
+              style={{
+                width: '100%',
+                maxWidth: '680px',
+                textAlign: 'center',
+                padding: '42px 25px',
+                background: 'rgba(31,40,51,0.82)',
+                border: '1px solid rgba(69,243,255,0.22)',
+                borderRadius: '24px',
+                boxShadow: '0 18px 48px rgba(0,0,0,0.35)'
+              }}
+            >
+              <div
+                style={{
+                  width: '118px',
+                  height: '118px',
+                  margin: '0 auto 26px',
+                  borderRadius: '50%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  border: '4px solid #45f3ff',
+                  boxShadow: '0 0 28px rgba(69,243,255,0.35)',
+                  fontSize: '52px'
+                }}
+              >
+                🎤
+              </div>
+
+              <h2 style={{ color: '#ffffff', fontSize: 'clamp(30px, 6vw, 46px)', marginBottom: '16px' }}>
+                הסוכן שלך מתחיל לדבר כאן
+              </h2>
+
+              <p style={{ color: '#b9c4d0', fontSize: '18px', lineHeight: '1.8', maxWidth: '510px', margin: '0 auto 28px' }}>
+                צור סוכן AI קולי שידבר עם אנשים, יקבל שיחות
+                ויוציא שיחות לפי ההנחיות שתגדיר לו.
+              </p>
+
+              <button
+                type="button"
+                className="btn btn-primary"
+                onClick={() => {
+                  setCreateAgentError(null);
+                  setShowCreateAgentForm(true);
+                }}
+                style={{ minWidth: '280px', padding: '16px 24px', fontSize: '17px', borderRadius: '12px' }}
+              >
+                צור סוכן קולי ראשון
+              </button>
+
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(3, 1fr)',
+                  gap: '12px',
+                  marginTop: '40px'
+                }}
+              >
+                <div style={{ color: '#d9faff', fontSize: '14px' }}>🎙️<br /><strong>מדבר טבעי</strong></div>
+                <div style={{ color: '#d9faff', fontSize: '14px' }}>☎️<br /><strong>מבצע שיחות</strong></div>
+                <div style={{ color: '#d9faff', fontSize: '14px' }}>📞<br /><strong>מקבל שיחות</strong></div>
+              </div>
+            </div>
+          </section>
         ) : (
           <div className="agent-content-layout">
             
@@ -622,13 +959,12 @@ export default function AgentPage() {
               </div>
 
               <div className="form-group">
-                <label>מטרת השיחה / הנחיות מיוחדות לשיחה זו</label>
+                <label>מטרת השיחה / הנחיות מיוחדות לשיחה זו <span style={{ opacity: 0.65 }}>(לא חובה)</span></label>
                 <textarea 
                   value={callGoal} 
                   onChange={e => setCallGoal(e.target.value)} 
-                  placeholder="למשל: לבדוק אם הוא מעוניין ברכישת מנוי חודשי..."
+                  placeholder="אפשר להשאיר ריק — הסוכן יפעל לפי ההנחיות שהוגדרו לו."
                   rows={4}
-                  required
                 />
               </div>
 

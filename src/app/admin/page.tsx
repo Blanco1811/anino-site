@@ -58,6 +58,27 @@ function AdminContent() {
           >
             WhatsApp Agent 🤖
           </Link>
+          <Link
+            href="/admin/home-cards"
+            className="tab"
+            style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center' }}
+          >
+            ניהול קופסאות ראשיות
+          </Link>
+          <Link
+            href="/admin/site-settings"
+            className="tab"
+            style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center' }}
+          >
+            ניהול לוגו
+          </Link>
+          <Link
+            href="/admin/hero"
+            className="tab"
+            style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center' }}
+          >
+            ניהול פתיח ראשי
+          </Link>
         </div>
       </div>
 

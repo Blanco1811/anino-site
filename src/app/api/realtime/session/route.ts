@@ -42,9 +42,17 @@ export async function POST(request: NextRequest) {
       where: { userId }
     });
 
-    const instructions = userAgent 
-      ? getAgentInstructions(userAgent) 
+    const baseInstructions = userAgent
+      ? getAgentInstructions(userAgent)
       : 'You are a low-latency voice agent.';
+
+    const instructions = `${baseInstructions}
+
+חשוב מאוד:
+- דבר תמיד בעברית טבעית וברורה.
+- השתמש במבטא עברי ככל האפשר.
+- אל תענה באנגלית אלא אם המשתמש מבקש במפורש.
+- פתח כל שיחה בברכה קצרה בעברית.`;
 
     // 4. Request ephemeral session token from OpenAI Realtime API
     const response = await fetch('https://api.openai.com/v1/realtime/client_secrets', {
@@ -60,7 +68,7 @@ export async function POST(request: NextRequest) {
           model: 'gpt-realtime-2',
           audio: {
             output: {
-              voice: 'alloy'
+              voice: 'marin'
             }
           },
           instructions: instructions

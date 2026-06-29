@@ -18,7 +18,11 @@ export class TwilioService {
     return !!(sid && token && from);
   }
 
-  public static async initiateCall(toNumber: string, purpose?: string): Promise<TwilioCallResponse> {
+  public static async initiateCall(
+    toNumber: string,
+    purpose?: string,
+    customTwiMLUrl?: string
+  ): Promise<TwilioCallResponse> {
     const { sid, token, from } = this.getCredentials();
     if (!sid || !token || !from) {
       return {
@@ -34,7 +38,10 @@ export class TwilioService {
       twilioBody.append('From', from);
       
       // Standard demo XML as default, or configure custom TwiML Url
-      const twiMLUrl = process.env.TWILIO_TWIML_URL || 'https://demo.twilio.com/docs/voice.xml';
+      const twiMLUrl =
+        customTwiMLUrl ||
+        process.env.TWILIO_TWIML_URL ||
+        'https://demo.twilio.com/docs/voice.xml';
       twilioBody.append('Url', twiMLUrl);
 
       const twilioRes = await fetch(

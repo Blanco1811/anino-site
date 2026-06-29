@@ -179,3 +179,27 @@ model Message {
   text       String
   createdAt  DateTime @default(now())
 }
+
+model HomeCard {
+  id          String   @id @default(cuid())
+  title       String
+  description String
+  icon        String   @default("✨")
+  imageUrl    String?
+  href        String   @default("#")
+  color       String   @default("blue")
+  sortOrder   Int      @default(0)
+  isVisible   Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model SiteSettings {
+  id              String   @id @default("main")
+  logoUrl         String?
+  heroLabel       String?
+  heroTitleLine1  String?
+  heroTitleLine2  String?
+  heroDescription String?
+  updatedAt       DateTime @updatedAt
+}

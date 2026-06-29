@@ -49,3 +49,17 @@ backups/
 *.key
 *.ppk
 .pgpass
+
+# Local environment / server-only files
+.env
+.env.local
+ecosystem.config.cjs
+start-anino-staging.sh
+start-twilio-bridge.sh
+twilio-bridge.cjs
+
+# Temporary backups and editor files
+*.before-*
+*.backup
+*.save
+*.swp

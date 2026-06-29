@@ -129,7 +129,7 @@ async function translateEntries(entries: Entry[], targetLanguage: string) {
 
   for (let index = 0; index < uncachedTexts.length; index += batchSize) {
     const batch = uncachedTexts.slice(index, index + batchSize);
-    const translated = await translateBatchWithServerApi(batch, targetLanguage, 'en');
+    const translated = await translateBatchWithServerApi(batch, targetLanguage, 'he');
     batch.forEach((text, batchIndex) => {
       LOCAL_TRANSLATION_CACHE.set(`${targetLanguage}|${text}`, translated[batchIndex] || text);
     });
@@ -176,7 +176,7 @@ const HomeLiveTranslation: React.FC<HomeLiveTranslationProps> = ({ children }) =
       const currentVersion = ++requestVersion;
       const entries = collectEntries(container);
 
-      if (targetLanguage === 'en') {
+      if (targetLanguage === 'he') {
         applyOriginalValues(entries);
         return;
       }
