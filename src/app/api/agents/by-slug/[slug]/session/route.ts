@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-import { getAgentInstructions } from '@/lib/agent-utils';
+import { getAgentInstructions, getAgentRealtimeVoice } from '@/lib/agent-utils';
 import { ensureCallCanStart } from '@/lib/call-billing';
 
 export const dynamic = 'force-dynamic';
@@ -27,6 +27,10 @@ export async function POST(
       phoneNumber: true,
       greeting: true,
       imageUrl: true,
+      voiceGender: true,
+      voiceName: true,
+      responseLength: true,
+      conversationStyle: true,
     },
     });
 
@@ -70,7 +74,7 @@ export async function POST(
           model: 'gpt-realtime-2',
           audio: {
             output: {
-              voice: 'alloy'
+              voice: getAgentRealtimeVoice(agent)
             }
           },
           instructions: getAgentInstructions(agent)

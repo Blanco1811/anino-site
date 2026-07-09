@@ -63,7 +63,7 @@ export async function PUT(
 
     const { id } = await params;
     const body = await request.json();
-    const { name, phoneNumber, purpose, tone, startTime, endTime } = body;
+    const { name, phoneNumber, purpose, tone, startTime, endTime, greeting, voiceGender, voiceName, responseLength, conversationStyle } = body;
 
     const agent = await prisma.agent.findFirst({
       where: { id, userId }
@@ -98,6 +98,11 @@ export async function PUT(
         phoneNumber: phoneNumber !== undefined ? phoneNumber : undefined,
         purpose: purpose !== undefined ? purpose : undefined,
         tone: Array.isArray(tone) ? tone : undefined,
+        greeting: greeting !== undefined ? greeting : undefined,
+        voiceGender: voiceGender !== undefined ? voiceGender : undefined,
+        voiceName: voiceName !== undefined ? voiceName : undefined,
+        responseLength: responseLength !== undefined ? responseLength : undefined,
+        conversationStyle: conversationStyle !== undefined ? conversationStyle : undefined,
         startTime: startTime !== undefined ? startTime : undefined,
         endTime: endTime !== undefined ? endTime : undefined,
         updatedAt: new Date()

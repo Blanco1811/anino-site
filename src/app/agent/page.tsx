@@ -11,6 +11,11 @@ interface Agent {
   purpose: string;
   status: string;
   tone: string[];
+  greeting?: string;
+  voiceGender?: string;
+  voiceName?: string;
+  responseLength?: string;
+  conversationStyle?: string;
   slug?: string;
 }
 
@@ -22,6 +27,38 @@ const formatStatus = (status?: string) => {
   if (s === 'completed') return 'הושלם';
   return status;
 };
+
+const agentVoiceGenderOptions = [
+  { value: 'neutral', label: 'ניטרלי', defaultVoice: 'alloy' },
+  { value: 'male', label: 'דיבור זכר', defaultVoice: 'cedar' },
+  { value: 'female', label: 'דיבור נקבה', defaultVoice: 'marin' },
+];
+
+const agentVoiceOptions = [
+  { value: 'alloy', label: 'Alloy - ניטרלי' },
+  { value: 'cedar', label: 'Cedar - זכר' },
+  { value: 'marin', label: 'Marin - נקבה' },
+  { value: 'coral', label: 'Coral' },
+  { value: 'sage', label: 'Sage' },
+  { value: 'echo', label: 'Echo' },
+  { value: 'shimmer', label: 'Shimmer' },
+  { value: 'verse', label: 'Verse' },
+  { value: 'ash', label: 'Ash' },
+  { value: 'ballad', label: 'Ballad' },
+];
+
+const responseLengthOptions = [
+  { value: 'short', label: 'קצר' },
+  { value: 'normal', label: 'רגיל' },
+  { value: 'detailed', label: 'מפורט' },
+];
+
+const conversationStyleOptions = [
+  { value: 'professional', label: 'מקצועי' },
+  { value: 'warm', label: 'חם ואנושי' },
+  { value: 'sales', label: 'מכירתי' },
+  { value: 'calm', label: 'רגוע' },
+];
 
 const formatTone = (tone?: string) => {
   if (!tone) return '';
@@ -67,6 +104,14 @@ export default function AgentPage() {
   const [editName, setEditName] = useState('');
   const [editPurpose, setEditPurpose] = useState('');
   const [editTone, setEditTone] = useState<string[]>([]);
+  const [editPhoneNumber, setEditPhoneNumber] = useState('');
+  const [editStartTime, setEditStartTime] = useState('');
+  const [editEndTime, setEditEndTime] = useState('');
+  const [editGreeting, setEditGreeting] = useState('');
+  const [editVoiceGender, setEditVoiceGender] = useState('neutral');
+  const [editVoiceName, setEditVoiceName] = useState('alloy');
+  const [editResponseLength, setEditResponseLength] = useState('normal');
+  const [editConversationStyle, setEditConversationStyle] = useState('professional');
   const [editLoading, setEditLoading] = useState(false);
   const [editError, setEditError] = useState<string | null>(null);
   const [editSuccess, setEditSuccess] = useState<string | null>(null);
@@ -83,6 +128,12 @@ export default function AgentPage() {
   const [createAgentStartTime, setCreateAgentStartTime] = useState('');
   const [createAgentEndTime, setCreateAgentEndTime] = useState('');
   const [createAgentTone, setCreateAgentTone] = useState<string[]>(['professional', 'friendly']);
+  const [createAgentGreeting, setCreateAgentGreeting] = useState('');
+  const [createAgentVoiceGender, setCreateAgentVoiceGender] = useState('neutral');
+  const [createAgentVoiceName, setCreateAgentVoiceName] = useState('alloy');
+  const [createAgentResponseLength, setCreateAgentResponseLength] = useState('normal');
+  const [createAgentConversationStyle, setCreateAgentConversationStyle] = useState('professional');
+  const [previewingVoice, setPreviewingVoice] = useState<string | null>(null);
   const [createAgentLoading, setCreateAgentLoading] = useState(false);
   const [createAgentError, setCreateAgentError] = useState<string | null>(null);
 
@@ -141,6 +192,42 @@ export default function AgentPage() {
     );
   };
 
+  const playVoicePreview = async (voice: string, sampleText?: string) => {
+    if (!voice || previewingVoice) return;
+
+    setPreviewingVoice(voice);
+
+    try {
+      const res = await fetch('/api/voice-preview', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          voice,
+          text: (sampleText || createAgentGreeting).trim() || 'שלום, אני הסוכן של אנינו. איך אפשר לעזור?'
+        })
+      });
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        throw new Error(data?.error || 'לא הצלחתי להשמיע דוגמת קול.');
+      }
+
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const audio = new Audio(url);
+
+      audio.onended = () => URL.revokeObjectURL(url);
+      audio.onerror = () => URL.revokeObjectURL(url);
+
+      await audio.play();
+    } catch (err: any) {
+      alert(err.message || 'לא הצלחתי להשמיע דוגמת קול.');
+    } finally {
+      setPreviewingVoice(null);
+    }
+  };
+
+
   const handleCreateAgent = async (e: React.FormEvent) => {
     e.preventDefault();
     setCreateAgentError(null);
@@ -170,7 +257,12 @@ export default function AgentPage() {
           phoneNumber: createAgentPhoneNumber.trim(),
           startTime: createAgentStartTime,
           endTime: createAgentEndTime,
-          tone: createAgentTone
+          tone: createAgentTone,
+          greeting: createAgentGreeting.trim(),
+          voiceGender: createAgentVoiceGender,
+          voiceName: createAgentVoiceName,
+          responseLength: createAgentResponseLength,
+          conversationStyle: createAgentConversationStyle
         })
       });
 
@@ -188,6 +280,11 @@ export default function AgentPage() {
       setCreateAgentStartTime('');
       setCreateAgentEndTime('');
       setCreateAgentTone(['professional', 'friendly']);
+      setCreateAgentGreeting('');
+      setCreateAgentVoiceGender('neutral');
+      setCreateAgentVoiceName('alloy');
+      setCreateAgentResponseLength('normal');
+      setCreateAgentConversationStyle('professional');
 
       if (data.agent?.slug) {
         const baseOrigin = origin || window.location.origin;
@@ -272,6 +369,14 @@ export default function AgentPage() {
       setEditName(agent.name);
       setEditPurpose(agent.purpose || '');
       setEditTone(agent.tone || []);
+      setEditPhoneNumber(agent.phoneNumber || '');
+      setEditStartTime(agent.startTime || '');
+      setEditEndTime(agent.endTime || '');
+      setEditGreeting(agent.greeting || '');
+      setEditVoiceGender(agent.voiceGender || 'neutral');
+      setEditVoiceName(agent.voiceName || 'alloy');
+      setEditResponseLength(agent.responseLength || 'normal');
+      setEditConversationStyle(agent.conversationStyle || 'professional');
       setEditError(null);
       setEditSuccess(null);
       setShowEditModal(true);
@@ -307,7 +412,15 @@ export default function AgentPage() {
         body: JSON.stringify({
           name: editName,
           purpose: editPurpose,
-          tone: editTone
+          phoneNumber: editPhoneNumber.trim(),
+          startTime: editStartTime,
+          endTime: editEndTime,
+          tone: editTone,
+          greeting: editGreeting.trim(),
+          voiceGender: editVoiceGender,
+          voiceName: editVoiceName,
+          responseLength: editResponseLength,
+          conversationStyle: editConversationStyle
         })
       });
 
@@ -447,7 +560,9 @@ export default function AgentPage() {
             justifyContent: 'center',
             padding: '20px',
             overflowY: 'auto'
-          }}>
+          ,
+            paddingBottom: 96,
+            WebkitOverflowScrolling: 'touch',}}>
             <form
               onSubmit={handleCreateAgent}
               dir="rtl"
@@ -461,7 +576,8 @@ export default function AgentPage() {
                 boxShadow: '0 24px 80px rgba(0,0,0,0.45)',
                 maxHeight: 'calc(100vh - 48px)',
                 overflowY: 'auto'
-              }}
+              ,
+                WebkitOverflowScrolling: 'touch',}}
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18 }}>
                 <h2 style={{ margin: 0 }}>פתח סוכן חדש</h2>
@@ -529,6 +645,85 @@ export default function AgentPage() {
                   />
                 </div>
               </div>
+
+
+              <label style={{ display: 'block', marginBottom: 6 }}>דיבור</label>
+              <select
+                value={createAgentVoiceGender}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  setCreateAgentVoiceGender(value);
+                  const selected = agentVoiceGenderOptions.find((item) => item.value === value);
+                  if (selected) setCreateAgentVoiceName(selected.defaultVoice);
+                }}
+                style={{ width: '100%', padding: 12, borderRadius: 10, border: '1px solid #334155', marginBottom: 14, background: '#0b1220', color: '#fff' }}
+              >
+                {agentVoiceGenderOptions.map((option) => (
+                  <option key={option.value} value={option.value}>{option.label}</option>
+                ))}
+              </select>
+
+              <label style={{ display: 'block', marginBottom: 6 }}>קול ספציפי</label>
+              <div style={{ display: 'flex', gap: 10, alignItems: 'center', marginBottom: 14 }}>
+                <select
+                  value={createAgentVoiceName}
+                  onChange={(e) => setCreateAgentVoiceName(e.target.value)}
+                  style={{ flex: 1, minWidth: 0, padding: 12, borderRadius: 10, border: '1px solid #334155', background: '#0b1220', color: '#fff' }}
+                >
+                  {agentVoiceOptions.map((option) => (
+                    <option key={option.value} value={option.value}>{option.label}</option>
+                  ))}
+                </select>
+
+                <button
+                  type="button"
+                  onClick={() => playVoicePreview(createAgentVoiceName)}
+                  disabled={previewingVoice === createAgentVoiceName}
+                  style={{
+                    whiteSpace: 'nowrap',
+                    padding: '12px 14px',
+                    borderRadius: 10,
+                    border: '1px solid rgba(94,234,212,0.55)',
+                    background: 'rgba(94,234,212,0.12)',
+                    color: '#ffffff',
+                    fontWeight: 800,
+                    cursor: previewingVoice === createAgentVoiceName ? 'wait' : 'pointer'
+                  }}
+                >
+                  {previewingVoice === createAgentVoiceName ? 'מנגן...' : '▶ שמע דוגמה'}
+                </button>
+              </div>
+
+              <label style={{ display: 'block', marginBottom: 6 }}>ברכת פתיחה</label>
+              <textarea
+                value={createAgentGreeting}
+                onChange={(e) => setCreateAgentGreeting(e.target.value)}
+                placeholder="לדוגמה: שלום, כאן הסוכן של העסק. איך אפשר לעזור?"
+                rows={3}
+                style={{ width: '100%', padding: 12, borderRadius: 10, border: '1px solid #334155', marginBottom: 14, background: '#0b1220', color: '#fff', resize: 'vertical' }}
+              />
+
+              <label style={{ display: 'block', marginBottom: 6 }}>אורך תשובה</label>
+              <select
+                value={createAgentResponseLength}
+                onChange={(e) => setCreateAgentResponseLength(e.target.value)}
+                style={{ width: '100%', padding: 12, borderRadius: 10, border: '1px solid #334155', marginBottom: 14, background: '#0b1220', color: '#fff' }}
+              >
+                {responseLengthOptions.map((option) => (
+                  <option key={option.value} value={option.value}>{option.label}</option>
+                ))}
+              </select>
+
+              <label style={{ display: 'block', marginBottom: 6 }}>סגנון שיחה</label>
+              <select
+                value={createAgentConversationStyle}
+                onChange={(e) => setCreateAgentConversationStyle(e.target.value)}
+                style={{ width: '100%', padding: 12, borderRadius: 10, border: '1px solid #334155', marginBottom: 14, background: '#0b1220', color: '#fff' }}
+              >
+                {conversationStyleOptions.map((option) => (
+                  <option key={option.value} value={option.value}>{option.label}</option>
+                ))}
+              </select>
 
               <div style={{ marginBottom: 8 }}>טון דיבור</div>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, marginBottom: 16 }}>
@@ -755,14 +950,35 @@ export default function AgentPage() {
 
       {/* Edit Agent Modal */}
       {showEditModal && (
-        <div className="modal-overlay" onClick={() => setShowEditModal(false)}>
-          <div className="modal-content" onClick={e => e.stopPropagation()}>
+        <div
+          className="modal-overlay edit-agent-modal-overlay"
+          onClick={() => setShowEditModal(false)}
+          style={{
+            alignItems: 'flex-start',
+            overflowY: 'auto',
+            padding: '24px 12px 120px',
+            WebkitOverflowScrolling: 'touch'
+          }}
+        >
+          <div
+            className="modal-content edit-agent-modal-content"
+            onClick={e => e.stopPropagation()}
+            style={{
+              maxHeight: 'calc(100vh - 48px)',
+              overflowY: 'auto',
+              WebkitOverflowScrolling: 'touch'
+            }}
+          >
             <div className="modal-header">
               <h3>עריכת פרטי סוכן</h3>
               <button onClick={() => setShowEditModal(false)} className="close-x">✕</button>
             </div>
             
-            <form onSubmit={handleEditSubmit} className="modal-form">
+            <form
+              onSubmit={handleEditSubmit}
+              className="modal-form edit-agent-modal-form"
+              style={{ overflow: 'visible' }}
+            >
               {editError && <div className="error-banner mb-15">{editError}</div>}
               {editSuccess && <div className="success-banner mb-15">{editSuccess}</div>}
 
@@ -777,18 +993,134 @@ export default function AgentPage() {
                 />
               </div>
 
-              <div className="form-group">
-                <label>מטרה והנחיות לסוכן</label>
-                <textarea 
-                  value={editPurpose} 
-                  onChange={e => setEditPurpose(e.target.value)} 
-                  placeholder="הגדר את תפקיד הסוכן וההנחיות שלו..."
-                  rows={4}
-                  required
-                />
-              </div>
+              <label style={{ display: 'block', marginBottom: 6 }}>מטרה / הוראות לסוכן</label>
+              <textarea
+                value={editPurpose}
+                onChange={(e) => setEditPurpose(e.target.value)}
+                placeholder="לדוגמה: לענות ללקוחות, להסביר על העסק, לקבל הזמנות ולחזור ללידים."
+                rows={5}
+                required
+                style={{
+                  width: '100%',
+                  padding: 12,
+                  borderRadius: 10,
+                  border: '1px solid #334155',
+                  marginBottom: 14,
+                  background: '#0b1220',
+                  color: '#fff',
+                  resize: 'vertical'
+                }}
+              />
 
               <div className="form-group">
+              <label style={{ display: 'block', marginBottom: 6 }}>טלפון / שיוך, לא חובה</label>
+              <input
+                value={editPhoneNumber}
+                onChange={(e) => setEditPhoneNumber(e.target.value)}
+                placeholder="לדוגמה: 0501234567"
+                style={{ width: '100%', padding: 12, borderRadius: 10, border: '1px solid #334155', marginBottom: 14, background: '#0b1220', color: '#fff' }}
+              />
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 14 }}>
+                <div>
+                  <label style={{ display: 'block', marginBottom: 6 }}>שעת התחלה</label>
+                  <input
+                    type="time"
+                    value={editStartTime}
+                    onChange={(e) => setEditStartTime(e.target.value)}
+                    style={{ width: '100%', padding: 12, borderRadius: 10, border: '1px solid #334155', background: '#0b1220', color: '#fff' }}
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', marginBottom: 6 }}>שעת סיום</label>
+                  <input
+                    type="time"
+                    value={editEndTime}
+                    onChange={(e) => setEditEndTime(e.target.value)}
+                    style={{ width: '100%', padding: 12, borderRadius: 10, border: '1px solid #334155', background: '#0b1220', color: '#fff' }}
+                  />
+                </div>
+              </div>
+
+              <label style={{ display: 'block', marginBottom: 6 }}>דיבור</label>
+              <select
+                value={editVoiceGender}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  setEditVoiceGender(value);
+                  const selected = agentVoiceGenderOptions.find((item) => item.value === value);
+                  if (selected) setEditVoiceName(selected.defaultVoice);
+                }}
+                style={{ width: '100%', padding: 12, borderRadius: 10, border: '1px solid #334155', marginBottom: 14, background: '#0b1220', color: '#fff' }}
+              >
+                {agentVoiceGenderOptions.map((option) => (
+                  <option key={option.value} value={option.value}>{option.label}</option>
+                ))}
+              </select>
+
+              <label style={{ display: 'block', marginBottom: 6 }}>קול ספציפי</label>
+              <div style={{ display: 'flex', gap: 10, alignItems: 'center', marginBottom: 14 }}>
+                <select
+                  value={editVoiceName}
+                  onChange={(e) => setEditVoiceName(e.target.value)}
+                  style={{ flex: 1, minWidth: 0, padding: 12, borderRadius: 10, border: '1px solid #334155', background: '#0b1220', color: '#fff' }}
+                >
+                  {agentVoiceOptions.map((option) => (
+                    <option key={option.value} value={option.value}>{option.label}</option>
+                  ))}
+                </select>
+
+                <button
+                  type="button"
+                  onClick={() => playVoicePreview(editVoiceName, editGreeting)}
+                  disabled={previewingVoice === editVoiceName}
+                  style={{
+                    whiteSpace: 'nowrap',
+                    padding: '12px 14px',
+                    borderRadius: 10,
+                    border: '1px solid rgba(94,234,212,0.55)',
+                    background: 'rgba(94,234,212,0.12)',
+                    color: '#ffffff',
+                    fontWeight: 800,
+                    cursor: previewingVoice === editVoiceName ? 'wait' : 'pointer'
+                  }}
+                >
+                  {previewingVoice === editVoiceName ? 'מנגן...' : '▶ שמע דוגמה'}
+                </button>
+              </div>
+
+              <label style={{ display: 'block', marginBottom: 6 }}>ברכת פתיחה</label>
+              <textarea
+                value={editGreeting}
+                onChange={(e) => setEditGreeting(e.target.value)}
+                placeholder="לדוגמה: שלום, כאן הסוכן של העסק. איך אפשר לעזור?"
+                rows={3}
+                style={{ width: '100%', padding: 12, borderRadius: 10, border: '1px solid #334155', marginBottom: 14, background: '#0b1220', color: '#fff', resize: 'vertical' }}
+              />
+
+              <label style={{ display: 'block', marginBottom: 6 }}>אורך תשובה</label>
+              <select
+                value={editResponseLength}
+                onChange={(e) => setEditResponseLength(e.target.value)}
+                style={{ width: '100%', padding: 12, borderRadius: 10, border: '1px solid #334155', marginBottom: 14, background: '#0b1220', color: '#fff' }}
+              >
+                {responseLengthOptions.map((option) => (
+                  <option key={option.value} value={option.value}>{option.label}</option>
+                ))}
+              </select>
+
+              <label style={{ display: 'block', marginBottom: 6 }}>סגנון שיחה</label>
+              <select
+                value={editConversationStyle}
+                onChange={(e) => setEditConversationStyle(e.target.value)}
+                style={{ width: '100%', padding: 12, borderRadius: 10, border: '1px solid #334155', marginBottom: 14, background: '#0b1220', color: '#fff' }}
+              >
+                {conversationStyleOptions.map((option) => (
+                  <option key={option.value} value={option.value}>{option.label}</option>
+                ))}
+              </select>
+
+
                 <label>טון דיבור</label>
                 <div style={{ display: 'flex', gap: '15px', marginTop: '5px', flexWrap: 'wrap' }}>
                   {['professional', 'friendly', 'empathetic', 'humorous'].map((t) => (

@@ -76,6 +76,10 @@ model Agent {
   legacyAgentId  Int?              @unique
   imageUrl       String?   // For agent avatar image
   greeting       String?   // Legacy initial agent greeting
+  voiceGender    String    @default("neutral") // male / female / neutral
+  voiceName      String    @default("alloy")   // OpenAI realtime voice
+  responseLength String    @default("normal")  // short / normal / detailed
+  conversationStyle String @default("professional") // professional / warm / sales / calm
   migrationRunId String?
   migrationRun   MigrationRun?     @relation(fields: [migrationRunId], references: [id])
   knowledge      AgentKnowledge[]

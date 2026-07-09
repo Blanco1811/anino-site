@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { jwtVerify } from 'jose';
 import { JWT_CONFIG } from '@/lib/config';
 import { prisma } from '@/lib/db';
-import { getAgentInstructions } from '@/lib/agent-utils';
+import { getAgentInstructions, getAgentRealtimeVoice } from '@/lib/agent-utils';
 import { ensureCallCanStart } from '@/lib/call-billing';
 
 export const dynamic = 'force-dynamic';
@@ -56,6 +56,10 @@ export async function POST(request: NextRequest) {
       phoneNumber: true,
       greeting: true,
       imageUrl: true,
+      voiceGender: true,
+      voiceName: true,
+      responseLength: true,
+      conversationStyle: true,
     },
     });
 
@@ -98,7 +102,7 @@ export async function POST(request: NextRequest) {
           model: 'gpt-realtime-2',
           audio: {
             output: {
-              voice: 'alloy'
+              voice: getAgentRealtimeVoice(userAgent)
             }
           },
           instructions: instructions

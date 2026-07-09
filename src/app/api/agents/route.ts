@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { name, phoneNumber, purpose, tone, startTime, endTime } = body;
+    const { name, phoneNumber, purpose, tone, startTime, endTime, greeting, voiceGender, voiceName, responseLength, conversationStyle } = body;
 
     if (!name) {
       return NextResponse.json({ error: 'Agent name is required' }, { status: 400 });
@@ -93,6 +93,11 @@ export async function POST(request: NextRequest) {
         purpose: purpose || '',
         status: 'waiting',
         tone: Array.isArray(tone) ? tone : [],
+        greeting: greeting || '',
+        voiceGender: voiceGender || 'neutral',
+        voiceName: voiceName || 'alloy',
+        responseLength: responseLength || 'normal',
+        conversationStyle: conversationStyle || 'professional',
         startTime: startTime || '',
         endTime: endTime || '',
         scheduledAt: null,
