@@ -18,7 +18,11 @@ export class TwilioService {
     return !!(sid && token && from);
   }
 
-  public static async initiateCall(toNumber: string, purpose?: string): Promise<TwilioCallResponse> {
+  public static async initiateCall(
+    toNumber: string,
+    purpose?: string,
+    customTwiMLUrl?: string
+  ): Promise<TwilioCallResponse> {
     const { sid, token, from } = this.getCredentials();
     if (!sid || !token || !from) {
       return {
@@ -33,9 +37,17 @@ export class TwilioService {
       twilioBody.append('To', toNumber);
       twilioBody.append('From', from);
       
-      // Standard demo XML as default, or configure custom TwiML Url
-      const twiMLUrl = process.env.TWILIO_TWIML_URL || 'https://demo.twilio.com/docs/voice.xml';
+      const twiMLUrl =
+        customTwiMLUrl ||
+        process.env.TWILIO_TWIML_URL ||
+        'https://demo.twilio.com/docs/voice.xml';
       twilioBody.append('Url', twiMLUrl);
+
+      // חיוב ארנק: Twilio חייבת להודיע ל-production כשהשיחה הסתיימה.
+      const statusCallbackUrl = 'https://anino-ai.com/api/twilio/status';
+      twilioBody.append('StatusCallback', statusCallbackUrl);
+      twilioBody.append('StatusCallbackMethod', 'POST');
+      twilioBody.append('StatusCallbackEvent', 'completed');
 
       const twilioRes = await fetch(
         `https://api.twilio.com/2010-04-01/Accounts/${sid}/Calls.json`,

@@ -33,7 +33,8 @@ export async function GET(request: NextRequest) {
     }
 
     const agents = await prisma.agent.findMany({
-      where: { userId }
+      where: { userId },
+      orderBy: { createdAt: 'desc' }
     });
 
     return NextResponse.json({ items: agents.map(formatAgent) });
@@ -57,15 +58,31 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Agent name is required' }, { status: 400 });
     }
 
-    // Generate and validate unique slug
-    const slug = slugify(name);
-    const isReserved = RESERVED_SLUGS.has(slug);
-    const existingAgent = await prisma.agent.findUnique({
-      where: { slug }
-    });
+    // Create a unique public link automatically for every customer.
+    const baseSlug = slugify(name) || 'agent';
+    let slug = baseSlug;
+    let suffix = 2;
 
-    if (isReserved || existingAgent) {
-      return NextResponse.json({ error: 'This public link is already taken. Please change the agent name.' }, { status: 400 });
+    while (true) {
+      const isReserved = RESERVED_SLUGS.has(slug);
+      const existingAgent = await prisma.agent.findUnique({
+        where: { slug },
+        select: { id: true },
+      });
+
+      if (!isReserved && !existingAgent) {
+        break;
+      }
+
+      slug = `${baseSlug}-${suffix}`;
+      suffix += 1;
+
+      if (suffix > 10000) {
+        return NextResponse.json(
+          { error: 'Could not generate a unique public link' },
+          { status: 500 }
+        );
+      }
     }
 
     const newAgent = await prisma.agent.create({

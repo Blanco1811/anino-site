@@ -31,6 +31,32 @@ export function useWebRTCCall({ sessionApiUrl, agentSlug }: UseWebRTCCallProps) 
       streamRef.current = stream;
 
       // 2. Request ephemeral token
+      // ANINO_PRE_LOG_CALL_BEFORE_SESSION
+      // Must create the billable Call before opening the OpenAI session.
+      // This blocks zero-balance users before microphone/OpenAI usage starts,
+      // and guarantees stopCall has callId/callToken for wallet billing.
+      if (!agentSlugRef.current) {
+        throw new Error('לא נטען סוכן פעיל לחיוב השיחה.');
+      }
+
+      const preLogRes = await fetch(
+        `/api/agents/by-slug/${encodeURIComponent(agentSlugRef.current)}/browser-call/start`,
+        { method: 'POST' }
+      );
+
+      const preLogData = await preLogRes.json().catch(() => ({}));
+
+      if (!preLogRes.ok) {
+        throw new Error(preLogData.error || 'אין יתרה מספקת להתחלת שיחה.');
+      }
+
+      if (!preLogData.callId || !preLogData.callToken) {
+        throw new Error('לא ניתן להתחיל שיחה: לא נוצר רישום חיוב.');
+      }
+
+      callIdRef.current = preLogData.callId;
+      callTokenRef.current = preLogData.callToken;
+
       const res = await fetch(sessionApiUrlRef.current, { method: 'POST' });
       if (!res.ok) {
         const errJson = await res.json().catch(() => ({ error: 'שגיאה בקבלת מפתח גישה' }));
@@ -112,21 +138,6 @@ export function useWebRTCCall({ sessionApiUrl, agentSlug }: UseWebRTCCallProps) 
 
       // 4. Log the call start in PostgreSQL after successful WebRTC connection
       if (agentSlugRef.current) {
-        try {
-          const logRes = await fetch(`/api/agents/by-slug/${agentSlugRef.current}/browser-call/start`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' }
-          });
-          if (logRes.ok) {
-            const logData = await logRes.json();
-            if (logData.callId && logData.callToken) {
-              callIdRef.current = logData.callId;
-              callTokenRef.current = logData.callToken;
-            }
-          }
-        } catch (logErr) {
-          console.error('Failed to log call start in database:', logErr);
-        }
       }
     } catch (err: any) {
       console.error(err);

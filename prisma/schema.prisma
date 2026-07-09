@@ -51,6 +51,7 @@ model User {
   whatsappSession   WhatsAppSession?
   businessProfile   BusinessProfile?
   customers         Customer[]
+  wallet            Wallet?
 
   @@index([migrationRunId])
 }
@@ -79,6 +80,12 @@ model Agent {
   migrationRun   MigrationRun?     @relation(fields: [migrationRunId], references: [id])
   knowledge      AgentKnowledge[]
 
+  notificationEnabled   Boolean  @default(false)
+  notificationWhatsapp  String?
+  notificationEmail     String?
+  notificationChannel   String   @default("whatsapp")
+  notificationTrigger   String   @default("orders")
+
   @@index([migrationRunId])
 }
 
@@ -99,6 +106,9 @@ model Call {
   direction               String?
   tries                   Int?
   transcript              String?
+  summary                 String?
+  summaryType             String?
+  actionRequired          String?
   recordingUrl            String?
   retellCallId            String?
   durationSeconds         Int?
@@ -178,4 +188,84 @@ model Message {
   sender     String   // "customer" or "agent"
   text       String
   createdAt  DateTime @default(now())
+}
+
+model HomeCard {
+  id          String   @id @default(cuid())
+  title       String
+  description String
+  icon        String   @default("✨")
+  imageUrl    String?
+  href        String   @default("#")
+  color       String   @default("blue")
+  sortOrder   Int      @default(0)
+  isVisible   Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model SiteSettings {
+  id              String   @id @default("main")
+  logoUrl         String?
+  heroLabel       String?
+  heroTitleLine1  String?
+  heroTitleLine2  String?
+  heroDescription String?
+  updatedAt       DateTime @updatedAt
+}
+
+model Wallet {
+  id           String              @id @default(cuid())
+  userId       String              @unique
+  user         User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  balance      Decimal             @default(0) @db.Decimal(14, 2)
+  currency     String              @default("ILS")
+  transactions WalletTransaction[]
+  autoTopUp    AutoTopUpSettings?
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
+}
+
+model WalletTransaction {
+  id           String   @id @default(cuid())
+  walletId     String
+  wallet       Wallet   @relation(fields: [walletId], references: [id], onDelete: Cascade)
+  type         String   // topup | charge | credit | refund
+  service      String?  // voice_agent | whatsapp_agent | whatsapp_marketing | social_marketing | email_marketing | phone_number | manual
+  amount       Decimal  @db.Decimal(14, 2)
+  balanceAfter Decimal  @db.Decimal(14, 2)
+  description  String
+  referenceId  String?  @unique
+  createdAt    DateTime @default(now())
+
+  @@index([walletId, createdAt])
+}
+
+model AutoTopUpSettings {
+  id                  String   @id @default(cuid())
+  walletId            String   @unique
+  wallet              Wallet   @relation(fields: [walletId], references: [id], onDelete: Cascade)
+  enabled             Boolean  @default(false)
+  thresholdAmount     Decimal  @default(20) @db.Decimal(14, 2)
+  topUpAmount         Decimal  @default(100) @db.Decimal(14, 2)
+  monthlyLimitAmount  Decimal? @db.Decimal(14, 2)
+  monthlyChargesLimit Int?
+  monthKey            String?
+  thisMonthAmount     Decimal  @default(0) @db.Decimal(14, 2)
+  thisMonthCharges    Int      @default(0)
+  lastTriggeredAt     DateTime?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+}
+
+model PricingSettings {
+  id                               String   @id
+  voiceAgentRetailPerMinute        Decimal  @default(0) @db.Decimal(14, 2)
+  twilioPhoneRetailPerMinute       Decimal  @default(0) @db.Decimal(14, 2)
+  voiceAgentEstimatedCostPerMinute Decimal  @default(0) @db.Decimal(14, 2)
+  twilioPhoneEstimatedCostPerMinute Decimal @default(0) @db.Decimal(14, 2)
+  targetGrossMargin                Decimal  @default(60) @db.Decimal(5, 2)
+  currency                         String   @default("ILS")
+  createdAt                        DateTime @default(now())
+  updatedAt                        DateTime @updatedAt
 }

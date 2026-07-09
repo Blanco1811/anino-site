@@ -34,13 +34,8 @@ const formatTone = (tone?: string) => {
 };
 
 export default function AgentPage() {
-  const { user, isLoading, login, logout, isAuthenticated } = useAuth();
-
-  // Authentication UI states
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [loginError, setLoginError] = useState<string | null>(null);
-  const [loginLoading, setLoginLoading] = useState(false);
+  const { user, isLoading, logout, isAuthenticated } = useAuth();
+  const hasMainSession = isAuthenticated || Boolean(user);
 
   // Agent workspace states
   const [agent, setAgent] = useState<Agent | null>(null);
@@ -63,7 +58,7 @@ export default function AgentPage() {
     startCall,
     stopCall
   } = useWebRTCCall({
-    sessionApiUrl: '/api/realtime/session',
+    sessionApiUrl: agent?.slug ? `/api/agents/by-slug/${agent.slug}/session` : '/api/realtime/session',
     agentSlug: agent?.slug
   });
 
@@ -81,11 +76,27 @@ export default function AgentPage() {
   const [createdAgentLink, setCreatedAgentLink] = useState<string | null>(null);
   const [origin, setOrigin] = useState('');
 
+  const [showCreateAgentForm, setShowCreateAgentForm] = useState(false);
+  const [createAgentName, setCreateAgentName] = useState('');
+  const [createAgentPurpose, setCreateAgentPurpose] = useState('');
+  const [createAgentPhoneNumber, setCreateAgentPhoneNumber] = useState('');
+  const [createAgentStartTime, setCreateAgentStartTime] = useState('');
+  const [createAgentEndTime, setCreateAgentEndTime] = useState('');
+  const [createAgentTone, setCreateAgentTone] = useState<string[]>(['professional', 'friendly']);
+  const [createAgentLoading, setCreateAgentLoading] = useState(false);
+  const [createAgentError, setCreateAgentError] = useState<string | null>(null);
+
   useEffect(() => {
     if (typeof window !== 'undefined') {
       setOrigin(window.location.origin);
     }
   }, []);
+
+  useEffect(() => {
+    if (!isLoading && !hasMainSession) {
+      window.location.replace('/');
+    }
+  }, [isLoading, hasMainSession]);
 
   // Fetch or create voice agent
   const fetchOrCreateAgent = async () => {
@@ -105,26 +116,8 @@ export default function AgentPage() {
       if (data.items && data.items.length > 0) {
         setAgent(data.items[0]);
       } else {
-        // Create default agent if none exists
-        const createRes = await fetch('/api/agents', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            name: 'Michael',
-            purpose: 'תשובות לשאלות נפוצות על המערכת והסבר כללי.',
-            tone: ['professional', 'friendly']
-          })
-        });
-        if (createRes.ok) {
-          const createData = await createRes.json();
-          setAgent(createData.agent);
-          if (createData.agent.slug) {
-            setCreatedAgentLink(`${origin}/${createData.agent.slug}`);
-            setTimeout(() => setCreatedAgentLink(null), 10000);
-          }
-        } else {
-          throw new Error('Failed to create default agent');
-        }
+        setAgent(null);
+        setShowCreateAgentForm(true);
       }
     } catch (err: any) {
       setAgentError(err.message || 'אירעה שגיאה בטעינת נתוני הסוכן.');
@@ -134,26 +127,80 @@ export default function AgentPage() {
   };
 
   useEffect(() => {
-    if (isAuthenticated) {
+    if (hasMainSession) {
       fetchOrCreateAgent();
     }
-  }, [isAuthenticated]);
+  }, [hasMainSession]);
 
-  const handleLoginSubmit = async (e: React.FormEvent) => {
+
+  const toggleCreateTone = (tone: string) => {
+    setCreateAgentTone((current) =>
+      current.includes(tone)
+        ? current.filter((item) => item !== tone)
+        : [...current, tone]
+    );
+  };
+
+  const handleCreateAgent = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoginError(null);
-    setLoginLoading(true);
+    setCreateAgentError(null);
+
+    const name = createAgentName.trim();
+    const purpose = createAgentPurpose.trim();
+
+    if (!name) {
+      setCreateAgentError('יש להזין שם לסוכן.');
+      return;
+    }
+
+    if (!purpose) {
+      setCreateAgentError('יש להזין מטרה / הוראות לסוכן.');
+      return;
+    }
+
+    setCreateAgentLoading(true);
+
     try {
-      const res = await login(email, password);
-      if (!res.success) {
-        setLoginError(res.error || 'שם משתמש או סיסמה שגויים');
+      const res = await fetch('/api/agents', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name,
+          purpose,
+          phoneNumber: createAgentPhoneNumber.trim(),
+          startTime: createAgentStartTime,
+          endTime: createAgentEndTime,
+          tone: createAgentTone
+        })
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || 'יצירת הסוכן נכשלה.');
       }
-    } catch (err) {
-      setLoginError('חיבור השרת נכשל');
+
+      setAgent(data.agent);
+      setShowCreateAgentForm(false);
+      setCreateAgentName('');
+      setCreateAgentPurpose('');
+      setCreateAgentPhoneNumber('');
+      setCreateAgentStartTime('');
+      setCreateAgentEndTime('');
+      setCreateAgentTone(['professional', 'friendly']);
+
+      if (data.agent?.slug) {
+        const baseOrigin = origin || window.location.origin;
+        setCreatedAgentLink(`${baseOrigin}/${data.agent.slug}`);
+        setTimeout(() => setCreatedAgentLink(null), 10000);
+      }
+    } catch (err: any) {
+      setCreateAgentError(err.message || 'אירעה שגיאה ביצירת הסוכן.');
     } finally {
-      setLoginLoading(false);
+      setCreateAgentLoading(false);
     }
   };
+
 
   const handleDialSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -323,141 +370,26 @@ export default function AgentPage() {
     );
   }
 
-  // Render Login screen if not authenticated
-  if (!isAuthenticated) {
+  // No separate login exists for the agent system.
+  // Access is granted only through the main ANINO website.
+  if (!isLoading && !hasMainSession) {
     return (
-      <div className="login-screen" dir="rtl">
-        <div className="login-card">
-          <h2>כניסה למערכת הסוכן</h2>
-          <p className="desc">התחבר כדי לנהל את סוכן ה-AI הקולי ולהתחיל שיחה</p>
-          
-          {loginError && <div className="error-banner">{loginError}</div>}
-          
-          <form onSubmit={handleLoginSubmit}>
-            <div className="form-group">
-              <label>דואר אלקטרוני</label>
-              <input 
-                type="email" 
-                value={email} 
-                onChange={e => setEmail(e.target.value)} 
-                placeholder="you@example.com" 
-                required 
-              />
-            </div>
-            
-            <div className="form-group">
-              <label>סיסמה</label>
-              <input 
-                type="password" 
-                value={password} 
-                onChange={e => setPassword(e.target.value)} 
-                placeholder="********" 
-                required 
-              />
-            </div>
-            
-            <button type="submit" className="login-btn" disabled={loginLoading}>
-              {loginLoading ? 'מתחבר...' : 'התחבר למערכת'}
-            </button>
-          </form>
-        </div>
-
-        <style jsx>{`
-          .login-screen {
-            width: 100vw;
-            height: 100vh;
-            background: radial-gradient(circle at center, #1f2833 0%, #0b0c10 100%);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            color: #fff;
-            font-family: system-ui, -apple-system, sans-serif;
-          }
-          .login-card {
-            background: rgba(31, 40, 51, 0.6);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            padding: 40px;
-            border-radius: 16px;
-            width: 100%;
-            max-width: 420px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
-          }
-          h2 {
-            margin: 0 0 10px 0;
-            font-size: 24px;
-            text-align: center;
-            color: #00D09C;
-          }
-          .desc {
-            color: #c5a880;
-            text-align: center;
-            margin: 0 0 24px 0;
-            font-size: 14px;
-          }
-          .error-banner {
-            background: rgba(239, 68, 68, 0.15);
-            border: 1px solid #ef4444;
-            color: #f87171;
-            padding: 10px;
-            border-radius: 8px;
-            font-size: 14px;
-            margin-bottom: 20px;
-            text-align: center;
-          }
-          .form-group {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            margin-bottom: 20px;
-          }
-          label {
-            font-size: 14px;
-            color: #b0b0b0;
-            font-weight: 500;
-          }
-          input {
-            background: #0b0c10;
-            border: 1px solid #45f3ff;
-            color: #fff;
-            padding: 12px;
-            border-radius: 8px;
-            font-size: 16px;
-            outline: none;
-            transition: all 0.2s ease;
-          }
-          input:focus {
-            box-shadow: 0 0 0 3px rgba(69, 243, 255, 0.2);
-          }
-          .login-btn {
-            background: #00D09C;
-            color: #0b0c10;
-            border: none;
-            padding: 14px;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-            width: 100%;
-            transition: all 0.2s ease;
-            box-shadow: 0 4px 14px rgba(0, 208, 156, 0.3);
-          }
-          .login-btn:hover {
-            transform: translateY(-2px);
-            background: #05e2ab;
-          }
-          .login-btn:disabled {
-            background: #666;
-            cursor: not-allowed;
-            transform: none;
-            box-shadow: none;
-          }
-        `}</style>
-      </div>
+      <main
+        dir="rtl"
+        style={{
+          minHeight: '100vh',
+          display: 'grid',
+          placeItems: 'center',
+          background: '#0b0c10',
+          color: '#ffffff',
+          fontSize: '18px',
+        }}
+      >
+        מעביר לדף הראשי...
+      </main>
     );
   }
 
-  // Render Dashboard
   return (
     <div className="agent-dashboard" dir="rtl">
       {/* Header bar */}
@@ -477,7 +409,178 @@ export default function AgentPage() {
       </header>
 
       {/* Main Panel */}
-      <main className="dash-main">
+      <main className="dash-main">\n
+          <button
+            type="button"
+            onClick={() => {
+              setCreateAgentError(null);
+              setShowCreateAgentForm(true);
+            }}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '8px',
+              padding: '10px 16px',
+              borderRadius: '999px',
+              background: 'linear-gradient(135deg, #5eead4, #22c55e)',
+              color: '#031313',
+              fontWeight: 900,
+              textDecoration: 'none',
+              marginBottom: '16px',
+              border: 0,
+              cursor: 'pointer'
+            }}
+          >
+            פתח סוכן חדש
+          </button>
+
+
+        {showCreateAgentForm && (
+          <div style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 1000,
+            background: 'rgba(0,0,0,0.72)',
+            display: 'flex',
+            alignItems: 'flex-start',
+            justifyContent: 'center',
+            padding: '20px',
+            overflowY: 'auto'
+          }}>
+            <form
+              onSubmit={handleCreateAgent}
+              dir="rtl"
+              style={{
+                width: 'min(720px, 100%)',
+                background: '#111827',
+                border: '1px solid rgba(0,209,178,0.35)',
+                borderRadius: 18,
+                padding: 24,
+                color: '#fff',
+                boxShadow: '0 24px 80px rgba(0,0,0,0.45)',
+                maxHeight: 'calc(100vh - 48px)',
+                overflowY: 'auto'
+              }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18 }}>
+                <h2 style={{ margin: 0 }}>פתח סוכן חדש</h2>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowCreateAgentForm(false);
+                    setCreateAgentError(null);
+                  }}
+                  style={{
+                    background: 'transparent',
+                    color: '#fff',
+                    border: '1px solid rgba(255,255,255,0.25)',
+                    borderRadius: 10,
+                    padding: '6px 10px',
+                    cursor: 'pointer'
+                  }}
+                >
+                  ✕
+                </button>
+              </div>
+
+              <label style={{ display: 'block', marginBottom: 6 }}>שם הסוכן</label>
+              <input
+                value={createAgentName}
+                onChange={(e) => setCreateAgentName(e.target.value)}
+                placeholder="לדוגמה: סוכן קדמה"
+                style={{ width: '100%', padding: 12, borderRadius: 10, border: '1px solid #334155', marginBottom: 14, background: '#0b1220', color: '#fff' }}
+              />
+
+              <label style={{ display: 'block', marginBottom: 6 }}>מטרה / הוראות לסוכן</label>
+              <textarea
+                value={createAgentPurpose}
+                onChange={(e) => setCreateAgentPurpose(e.target.value)}
+                placeholder="לדוגמה: לענות ללקוחות, להסביר על העסק, לקבל הזמנות ולחזור ללידים."
+                rows={5}
+                style={{ width: '100%', padding: 12, borderRadius: 10, border: '1px solid #334155', marginBottom: 14, background: '#0b1220', color: '#fff', resize: 'vertical' }}
+              />
+
+              <label style={{ display: 'block', marginBottom: 6 }}>טלפון / שיוך, לא חובה</label>
+              <input
+                value={createAgentPhoneNumber}
+                onChange={(e) => setCreateAgentPhoneNumber(e.target.value)}
+                placeholder="לדוגמה: 0501234567"
+                style={{ width: '100%', padding: 12, borderRadius: 10, border: '1px solid #334155', marginBottom: 14, background: '#0b1220', color: '#fff' }}
+              />
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 14 }}>
+                <div>
+                  <label style={{ display: 'block', marginBottom: 6 }}>שעת התחלה</label>
+                  <input
+                    type="time"
+                    value={createAgentStartTime}
+                    onChange={(e) => setCreateAgentStartTime(e.target.value)}
+                    style={{ width: '100%', padding: 12, borderRadius: 10, border: '1px solid #334155', background: '#0b1220', color: '#fff' }}
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', marginBottom: 6 }}>שעת סיום</label>
+                  <input
+                    type="time"
+                    value={createAgentEndTime}
+                    onChange={(e) => setCreateAgentEndTime(e.target.value)}
+                    style={{ width: '100%', padding: 12, borderRadius: 10, border: '1px solid #334155', background: '#0b1220', color: '#fff' }}
+                  />
+                </div>
+              </div>
+
+              <div style={{ marginBottom: 8 }}>טון דיבור</div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, marginBottom: 16 }}>
+                {[
+                  ['professional', 'מקצועי'],
+                  ['friendly', 'ידידותי'],
+                  ['empathetic', 'אמפתי'],
+                  ['humorous', 'הומוריסטי']
+                ].map(([value, label]) => (
+                  <label key={value} style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                    <input
+                      type="checkbox"
+                      checked={createAgentTone.includes(value)}
+                      onChange={() => toggleCreateTone(value)}
+                    />
+                    {label}
+                  </label>
+                ))}
+              </div>
+
+              {createAgentError && (
+                <div style={{
+                  color: '#fecaca',
+                  background: 'rgba(239,68,68,0.12)',
+                  border: '1px solid rgba(239,68,68,0.35)',
+                  padding: 10,
+                  borderRadius: 10,
+                  marginBottom: 14
+                }}>
+                  {createAgentError}
+                </div>
+              )}
+
+              <div style={{ display: 'flex', gap: 12 }}>
+                <button type="submit" className="btn btn-primary" disabled={createAgentLoading}>
+                  {createAgentLoading ? 'פותח סוכן...' : 'פתח סוכן חדש'}
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={() => {
+                    setShowCreateAgentForm(false);
+                    setCreateAgentError(null);
+                  }}
+                >
+                  ביטול
+                </button>
+              </div>
+            </form>
+          </div>
+        )}
+
         {createdAgentLink && (
           <div className="new-agent-success-banner">
             <strong>סוכן קולי נוצר בהצלחה!</strong>
@@ -530,9 +633,9 @@ export default function AgentPage() {
                   <button 
                     onClick={startCall} 
                     className="btn btn-primary"
-                    disabled={webRTCLoading}
+                    disabled={webRTCLoading || !agent?.slug}
                   >
-                    {webRTCLoading ? 'מתחבר למיקרופון...' : 'דברו עם הסוכן (בדפדפן)'}
+                    {webRTCLoading ? 'מתחבר למיקרופון...' : !agent?.slug ? 'טוען סוכן...' : 'דברו עם הסוכן (בדפדפן)'}
                   </button>
                 ) : (
                   <button onClick={stopCall} className="btn btn-danger">

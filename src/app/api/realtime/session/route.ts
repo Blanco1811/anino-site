@@ -3,6 +3,7 @@ import { jwtVerify } from 'jose';
 import { JWT_CONFIG } from '@/lib/config';
 import { prisma } from '@/lib/db';
 import { getAgentInstructions } from '@/lib/agent-utils';
+import { ensureCallCanStart } from '@/lib/call-billing';
 
 export const dynamic = 'force-dynamic';
 
@@ -39,8 +40,45 @@ export async function POST(request: NextRequest) {
 
     // 3. Find user's agent to fetch instructions and tone
     const userAgent = await prisma.agent.findFirst({
-      where: { userId }
+      where: { userId },
+      orderBy: { createdAt: 'desc' },
+      select: {
+      id: true,
+      name: true,
+      slug: true,
+      purpose: true,
+      status: true,
+      tone: true,
+      startTime: true,
+      endTime: true,
+      scheduledAt: true,
+      userId: true,
+      phoneNumber: true,
+      greeting: true,
+      imageUrl: true,
+    },
     });
+
+    // ANINO_DASHBOARD_SESSION_BALANCE_CHECK
+    if (!userAgent) {
+      return NextResponse.json(
+        { error: 'לא נמצא סוכן לחשבון הזה.' },
+        { status: 404 }
+      );
+    }
+
+    const balanceCheck = await ensureCallCanStart(userId, 'browser');
+
+    if (!balanceCheck.ok) {
+      return NextResponse.json(
+        {
+          error: balanceCheck.error || 'אין יתרה מספקת להתחלת שיחה.',
+          required: balanceCheck.required,
+          balance: balanceCheck.balance,
+        },
+        { status: 402 }
+      );
+    }
 
     const instructions = userAgent 
       ? getAgentInstructions(userAgent) 

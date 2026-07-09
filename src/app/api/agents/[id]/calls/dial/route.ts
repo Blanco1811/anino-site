@@ -4,6 +4,7 @@ import { JWT_CONFIG } from '@/lib/config';
 import { prisma } from '@/lib/db';
 import { TwilioService } from '@/lib/twilio';
 import { formatAgent } from '@/lib/agent-utils';
+import { ensureCallCanStart } from '@/lib/call-billing';
 
 // Helper to get userId from request token
 async function getUserIdFromRequest(request: NextRequest): Promise<string | null> {
@@ -54,14 +55,32 @@ export async function POST(
       return NextResponse.json({ error: 'הסוכן לא נמצא במערכת.' }, { status: 404 });
     }
 
+    const startCheck = await ensureCallCanStart(agent.userId, 'twilio');
+
+    if (!startCheck.ok) {
+      return NextResponse.json(
+        { error: startCheck.error || 'אין יתרה מספקת להתחלת שיחה.' },
+        { status: 402 }
+      );
+    }
+
     // Format phone number
     let formattedNumber = phoneNumber.trim();
     if (formattedNumber.startsWith('0')) {
       formattedNumber = '+972' + formattedNumber.slice(1);
     }
 
-    // Use Twilio Service to make the call
-    const twilioCall = await TwilioService.initiateCall(formattedNumber, goal);
+    const publicBaseUrl =
+      process.env.TWILIO_PUBLIC_BASE_URL || 'https://anino-ai.com';
+
+    const twimlUrl =
+      `${publicBaseUrl}/api/twilio/voice?agentId=${encodeURIComponent(id)}`;
+
+    const twilioCall = await TwilioService.initiateCall(
+      formattedNumber,
+      goal,
+      twimlUrl
+    );
 
     if (!twilioCall.success) {
       return NextResponse.json({
@@ -79,6 +98,7 @@ export async function POST(
         purpose: goal || '',
         status: 'calling',
         twilioSid: twilioCallSid,
+        direction: 'twilio',
         startedAt: new Date()
       }
     });

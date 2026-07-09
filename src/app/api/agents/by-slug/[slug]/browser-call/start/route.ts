@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { SignJWT } from 'jose';
 import { JWT_CONFIG } from '@/lib/config';
+import { ensureCallCanStart } from '@/lib/call-billing';
 
 export const dynamic = 'force-dynamic';
 
@@ -14,11 +15,35 @@ export async function POST(
 
     // 1. Verify that the agent exists by slug
     const agent = await prisma.agent.findUnique({
-      where: { slug }
+      where: { slug },
+      select: {
+      id: true,
+      name: true,
+      slug: true,
+      purpose: true,
+      status: true,
+      tone: true,
+      startTime: true,
+      endTime: true,
+      scheduledAt: true,
+      userId: true,
+      phoneNumber: true,
+      greeting: true,
+      imageUrl: true,
+    },
     });
 
     if (!agent) {
       return NextResponse.json({ error: 'Agent not found' }, { status: 404 });
+    }
+
+    const startCheck = await ensureCallCanStart(agent.userId, 'browser');
+
+    if (!startCheck.ok) {
+      return NextResponse.json(
+        { error: startCheck.error || 'אין יתרה מספקת להתחלת שיחה.' },
+        { status: 402 }
+      );
     }
 
     // 2. Create a new Call record in database

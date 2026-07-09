@@ -1,40 +1,15 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import LanguageProvider from '@/components/LanguageProvider/LanguageProvider';
 import { AuthProvider } from '@/contexts/AuthContext';
 
-const BUILD_VERSION = process.env.NEXT_PUBLIC_BUILD_ID || '1';
 
 interface ClientWrapperProps {
   children: React.ReactNode;
 }
 
 const ClientWrapper: React.FC<ClientWrapperProps> = ({ children }) => {
-  // Cache-bust all stylesheets and scripts with build version param,
-  // including ones added dynamically during client-side navigation
-  useEffect(() => {
-    const addVersion = (el: HTMLLinkElement | HTMLScriptElement) => {
-      const attr = el instanceof HTMLLinkElement ? 'href' : 'src';
-      const val = el.getAttribute(attr);
-      if (!val || val.includes('v=' + BUILD_VERSION)) return;
-      try {
-        const url = new URL(val, window.location.origin);
-        url.searchParams.set('v', BUILD_VERSION);
-        el.setAttribute(attr, url.toString());
-      } catch (e) {}
-    };
-
-    // Only cache-bust elements already in the DOM at mount time.
-    // Do NOT use a MutationObserver to intercept dynamically-added stylesheets/scripts:
-    // Next.js tracks navigation-injected <link rel="stylesheet"> by their exact href and
-    // waits for them to load before swapping the UI. Mutating the href breaks that signal,
-    // causing client-side navigation to hang forever ("nothing happens").
-    // Next.js content-hashes its chunk filenames (e.g. src_abc123._.css), so those chunks
-    // never go stale and do not need a version param added.
-    document.querySelectorAll('link[rel="stylesheet"]').forEach(el => addVersion(el as HTMLLinkElement));
-    document.querySelectorAll('script[src]').forEach(el => addVersion(el as HTMLScriptElement));
-  }, []);
 
   return (
     <LanguageProvider>

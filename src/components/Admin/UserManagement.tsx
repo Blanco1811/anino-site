@@ -12,6 +12,17 @@ interface User {
   phone: string | null;
   createdAt: string;
   updatedAt: string;
+  walletBalance: string;
+  walletCurrency: string;
+}
+
+function formatMoney(value: string | number) {
+  return new Intl.NumberFormat('he-IL', {
+    style: 'currency',
+    currency: 'ILS',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(Number(value || 0));
 }
 
 const UserManagement: React.FC = () => {
@@ -51,6 +62,59 @@ const UserManagement: React.FC = () => {
       fetchUsers();
     }
   }, [isAdmin, adminPassword]);
+
+  const addMoneyToUser = async (user: User) => {
+    const amount = window.prompt(
+      `כמה כסף להוסיף ל-${user.firstName} ${user.lastName}?`,
+      '100.00'
+    );
+
+    if (amount === null || !amount.trim()) {
+      return;
+    }
+
+    const description = window.prompt(
+      'הערה לטעינה:',
+      'טעינה ידנית על ידי מנהל'
+    );
+
+    if (description === null) {
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/admin/wallet/topup', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Admin-Password': adminPassword,
+        },
+        body: JSON.stringify({
+          userId: user.id,
+          amount: amount.trim(),
+          description: description.trim(),
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'לא ניתן להוסיף כסף');
+      }
+
+      alert(
+        `נוספו ${formatMoney(amount.trim())}. היתרה החדשה: ${formatMoney(data.balance)}`
+      );
+
+      await fetchUsers();
+    } catch (topUpError) {
+      alert(
+        topUpError instanceof Error
+          ? topUpError.message
+          : 'לא ניתן להוסיף כסף'
+      );
+    }
+  };
 
   const filteredUsers = users.filter(user => 
     user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -123,13 +187,15 @@ const UserManagement: React.FC = () => {
                 <th>Name</th>
                 <th>Email</th>
                 <th>Phone</th>
+                <th>Balance</th>
                 <th>Created</th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody>
               {filteredUsers.length === 0 ? (
                 <tr>
-                  <td colSpan={4} className="no-results">
+                  <td colSpan={6} className="no-results">
                     {users.length > 0 
                       ? 'No matching users found. Try clearing the search.'
                       : 'No users found in the database.'}
@@ -141,7 +207,30 @@ const UserManagement: React.FC = () => {
                     <td data-label="Name">{user.firstName} {user.lastName}</td>
                     <td data-label="Email">{user.email}</td>
                     <td data-label="Phone">{user.phone || '-'}</td>
-                    <td data-label="Created">{new Date(user.createdAt).toLocaleDateString()}</td>
+                    <td data-label="Balance" style={{ fontWeight: 800 }}>
+                      {formatMoney(user.walletBalance)}
+                    </td>
+                    <td data-label="Created">
+                      {new Date(user.createdAt).toLocaleDateString('he-IL')}
+                    </td>
+                    <td data-label="Actions">
+                      <button
+                        type="button"
+                        onClick={() => addMoneyToUser(user)}
+                        style={{
+                          background: '#2363e8',
+                          color: '#fff',
+                          border: 0,
+                          borderRadius: '7px',
+                          padding: '8px 12px',
+                          cursor: 'pointer',
+                          fontWeight: 700,
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
+                        הוסף כסף
+                      </button>
+                    </td>
                   </tr>
                 ))
               )}

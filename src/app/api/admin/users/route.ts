@@ -3,19 +3,13 @@ import { prisma } from '@/lib/db';
 
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin-secret-2025';
 
-// Helper function to verify admin access
-const verifyAdminAccess = (request: NextRequest) => {
+function verifyAdminAccess(request: NextRequest) {
   const adminPassword = request.headers.get('X-Admin-Password');
-  if (!adminPassword || adminPassword !== ADMIN_PASSWORD) {
-    return false;
-  }
-  return true;
-};
+  return Boolean(adminPassword && adminPassword === ADMIN_PASSWORD);
+}
 
-// Get all users
 export async function GET(request: NextRequest) {
   try {
-    // Verify admin access
     if (!verifyAdminAccess(request)) {
       return NextResponse.json(
         { error: 'Unauthorized' },
@@ -23,7 +17,6 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Get all users from the database
     const users = await prisma.user.findMany({
       select: {
         id: true,
@@ -33,19 +26,28 @@ export async function GET(request: NextRequest) {
         phone: true,
         createdAt: true,
         updatedAt: true,
+        wallet: {
+          select: {
+            balance: true,
+            currency: true,
+          },
+        },
       },
       orderBy: {
         createdAt: 'desc',
       },
     });
 
-    console.log('API - Fetched users:', users);
-    
-    return NextResponse.json({ 
-      users: Array.isArray(users) ? users : []
+    return NextResponse.json({
+      users: users.map(({ wallet, ...user }) => ({
+        ...user,
+        walletBalance: wallet?.balance.toFixed(2) ?? '0.00',
+        walletCurrency: wallet?.currency ?? 'ILS',
+      })),
     });
-  } catch (err) {
-    console.error('Error fetching users:', err);
+  } catch (error) {
+    console.error('Error fetching users:', error);
+
     return NextResponse.json(
       { error: 'An error occurred while fetching users' },
       { status: 500 }

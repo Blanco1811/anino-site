@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { getAgentInstructions } from '@/lib/agent-utils';
+import { ensureCallCanStart } from '@/lib/call-billing';
 
 export const dynamic = 'force-dynamic';
 
@@ -11,11 +12,40 @@ export async function POST(
   try {
     const { slug } = await params;
     const agent = await prisma.agent.findUnique({
-      where: { slug }
+      where: { slug },
+      select: {
+      id: true,
+      name: true,
+      slug: true,
+      purpose: true,
+      status: true,
+      tone: true,
+      startTime: true,
+      endTime: true,
+      scheduledAt: true,
+      userId: true,
+      phoneNumber: true,
+      greeting: true,
+      imageUrl: true,
+    },
     });
 
     if (!agent) {
       return NextResponse.json({ error: 'Agent not found' }, { status: 404 });
+    }
+
+    // ANINO_PUBLIC_SESSION_BALANCE_CHECK
+    const balanceCheck = await ensureCallCanStart(agent.userId, 'browser');
+
+    if (!balanceCheck.ok) {
+      return NextResponse.json(
+        {
+          error: balanceCheck.error || 'אין יתרה מספקת להתחלת שיחה.',
+          required: balanceCheck.required,
+          balance: balanceCheck.balance,
+        },
+        { status: 402 }
+      );
     }
 
     // Check OpenAI API Key
